@@ -1,0 +1,21 @@
+# This is a generated file. Not intended for manual editing.
+version: "3.8"
+services:
+  web:
+    build:
+      context: "/home/kostja/RiderProjects/GarageGenius/GarageGenius"
+      dockerfile: "Dockerfile"
+      target: "build"
+    command: []
+    entrypoint:
+    - "dotnet"
+    - "/app/bin/Debug/net8.0/GarageGenius.dll"
+    environment:
+      ASPNETCORE_STATICWEBASSETS: "/app/bin/Debug/net8.0/GarageGenius.staticwebassets.runtime.CT.json"
+    image: "garagegenius:dev"
+    ports: []
+    volumes:
+    - "/home/kostja/RiderProjects/GarageGenius/GarageGenius:/app:rw"
+    - "/home/kostja/RiderProjects/GarageGenius:/src:rw"
+    - "/home/kostja/.nuget/packages:/root/.nuget/packages"
+    working_dir: "/app"

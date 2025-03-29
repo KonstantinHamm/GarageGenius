@@ -1,23 +1,27 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-USER $APP_UID
-WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
-
+﻿# Use the official .NET SDK image as a build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["GarageGenius/GarageGenius.csproj", "GarageGenius/"]
-RUN dotnet restore "GarageGenius/GarageGenius.csproj"
+
+# Copy the project file and restore dependencies
+COPY ["GarageGenius.csproj", "."]
+RUN dotnet restore "GarageGenius.csproj"
+
+# Copy the remaining source code and build the application
 COPY . .
-WORKDIR "/src/GarageGenius"
+WORKDIR /src
 RUN dotnet build "GarageGenius.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "GarageGenius.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+# Publish the application
+RUN dotnet publish "GarageGenius.csproj" -c $BUILD_CONFIGURATION -o /app/publish
 
-FROM base AS final
+# Use the official ASP.NET Core runtime image as a base image
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
-COPY --from=publish /app/publish .
+COPY --from=build /app/publish .
+
+# Expose port 80
+EXPOSE 80
+
+# Start the application
 ENTRYPOINT ["dotnet", "GarageGenius.dll"]

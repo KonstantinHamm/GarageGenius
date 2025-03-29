@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:8080"  # Update the port mapping
+    depends_on:
+      - postgres
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=GarageGenius;Username=geniusUser;Password=geniusPassword"
+
+  postgres:
+    image: postgres:latest
+    ports:
+      - "5433:5432"  # Change the host port to 5433
+    environment:
+      POSTGRES_DB: GarageGenius
+      POSTGRES_USER: geniusUser
+      POSTGRES_PASSWORD: geniusPassword
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
