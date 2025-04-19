@@ -4,6 +4,6 @@ using Microsoft.EntityFrameworkCore;
 namespace GarageGenius.Data;
 
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-    : IdentityDbContext<ApplicationUser>(options)
+    : DbContext(options)
 {
 }
