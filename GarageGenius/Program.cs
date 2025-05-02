@@ -62,7 +62,6 @@ app.MapGet("/Account/Login", async (HttpContext httpContext, string returnUrl = 
         .Build();
 
     authenticationProperties.IsPersistent = true;
-
     await httpContext.ChallengeAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
 });
 
