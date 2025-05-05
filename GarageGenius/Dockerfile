@@ -21,7 +21,7 @@ WORKDIR /app
 COPY --from=build /app/publish .
 
 # Expose port 80
-EXPOSE 80
+EXPOSE 80 443
 
 # Start the application
 ENTRYPOINT ["dotnet", "GarageGenius.dll"]

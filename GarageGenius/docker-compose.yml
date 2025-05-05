@@ -4,17 +4,24 @@ services:
   web:
     build: .
     ports:
-      - "5000:8080"  # Update the port mapping
+      - "5000:80"    # HTTP Mapping
+      - "5001:443"   # HTTPS Mapping
     depends_on:
       - postgres
+    volumes:
+      - ~/RiderProjects/GarageGenius_Certs/certificate.pfx:/https/certificate.pfx:ro
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: "https://+:443;http://+:80"
+      ASPNETCORE_HTTPS_PORT: "443"
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=GarageGenius;Username=geniusUser;Password=geniusPassword"
+      ASPNETCORE_Kestrel__Certificates__Default__Path: /https/certificate.pfx
+      ASPNETCORE_Kestrel__Certificates__Default__Password: "Tog2Phon"
 
   postgres:
     image: postgres:latest
     ports:
-      - "5433:5432"  # Change the host port to 5433
+      - "5433:5432"
     environment:
       POSTGRES_DB: GarageGenius
       POSTGRES_USER: geniusUser
