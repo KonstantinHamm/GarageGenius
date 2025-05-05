@@ -2,69 +2,41 @@
 
 @inject NavigationManager NavigationManager
 
-@* <div class="top-row ps-3 navbar navbar-dark"> *@
-@*     <div class="container-fluid"> *@
-@*         <a class="navbar-brand" href="">GarageGenius</a> *@
-@*     </div> *@
-@* </div> *@
-@* *@
-@* <input type="checkbox" title="Navigation menu" class="navbar-toggler"/> *@
-@* *@
-@* <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()"> *@
-@*     <nav class="flex-column"> *@
-@*         <div class="nav-item px-3"> *@
-@*             <NavLink class="nav-link" href="" Match="NavLinkMatch.All"> *@
-@*                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home *@
-@*             </NavLink> *@
-@*         </div> *@
-@* *@
-@*         <div class="nav-item px-3"> *@
-@*             <NavLink class="nav-link" href="counter"> *@
-@*                 <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter *@
-@*             </NavLink> *@
-@*         </div> *@
-@* *@
-@*         <div class="nav-item px-3"> *@
-@*             <NavLink class="nav-link" href="weather"> *@
-@*                 <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather *@
-@*             </NavLink> *@
-@*         </div> *@
-@*         <AuthorizeView> *@
-@*             <Authorized> *@
-@*                 <div class="nav-item px-3"> *@
-@*                     <NavLink class="nav-link" href="account/manage"> *@
-@*                         <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> Manage Account *@
-@*                     </NavLink> *@
-@*                 </div> *@
-@*                 <div class="nav-item px-3"> *@
-@*                     <form action="/logout" method="post"> *@
-@*                         <AntiforgeryToken/> *@
-@*                         $1$ <input type="hidden" name="ReturnUrl" value="@currentUrl"/> #1# *@
-@*                         <button type="submit" class="nav-link"> *@
-@*                             <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout *@
-@*                         </button> *@
-@*                     </form> *@
-@*                 </div> *@
-@*             </Authorized> *@
-@*             <NotAuthorized> *@
-@*                 <div class="nav-item px-3"> *@
-@*                     <NavLink class="nav-link" href="Account/Login"> *@
-@*                         <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Login *@
-@*                     </NavLink> *@
-@*                 </div> *@
-@*             </NotAuthorized> *@
-@*         </AuthorizeView> *@
-@*     </nav> *@
-@* </div> *@
+<MudNavMenu Bordered="true" Margin="Margin.Normal" Rounded="true">
 
-<MudNavMenu>
-    <MudNavLink Href="/" Match="NavLinkMatch.All">Dashboard</MudNavLink>
-    <MudNavLink Href="/servers" Match="NavLinkMatch.Prefix">Servers</MudNavLink>
-    <MudNavGroup Title="Settings" Expanded="true">
-        <MudNavLink Href="/users"  Match="NavLinkMatch.Prefix">Users</MudNavLink>
-        <MudNavLink Href="/security"  Match="NavLinkMatch.Prefix">Security</MudNavLink>
-    </MudNavGroup>
-    <MudNavLink Href="/about"  Match="NavLinkMatch.Prefix">About</MudNavLink>
+    <AuthorizeView>
+        <Authorized>
+            <MudNavLink Href="/dashboard" Icon="@Icons.Material.Filled.DashboardCustomize" Match="NavLinkMatch.All">
+                Dashboard
+            </MudNavLink>
+            <MudNavGroup Title="Nachweise" Expanded="false" Icon="@Icons.Material.Filled.Policy">
+                <MudNavLink Href="/servicelog" Icon="@Icons.Material.Filled.History" Match="NavLinkMatch.Prefix">
+                    Übersicht
+                </MudNavLink>
+                <MudNavLink Href="/search_records" Icon="@Icons.Material.Filled.Search" Match="NavLinkMatch.Prefix">
+                    Suche
+                </MudNavLink>
+            </MudNavGroup>
+            <MudNavLink Href="/devices" Icon="@Icons.Material.Filled.PhoneAndroid" Match="NavLinkMatch.Prefix">Mobile
+                Geräte
+            </MudNavLink>
+            <MudNavGroup Title="Einstellungen" Expanded="false" Icon="@Icons.Material.Filled.Settings">
+                <MudNavLink Href="/settings" Icon="@Icons.Material.Filled.SettingsApplications"
+                            Match="NavLinkMatch.Prefix">App-Einstellungen
+                </MudNavLink>
+                <MudNavLink Href="/account" Icon="@Icons.Material.Filled.ManageAccounts" Match="NavLinkMatch.Prefix">
+                    Account
+                </MudNavLink>
+            </MudNavGroup>
+            <MudNavLink Href="/logout" Icon="@Icons.Material.Filled.Logout" Match="NavLinkMatch.Prefix">Logout
+            </MudNavLink>
+        </Authorized>
+        <NotAuthorized>
+            <MudNavLink Href="/" Icon="@Icons.Material.Filled.Home" Match="NavLinkMatch.All">Home</MudNavLink>
+            <MudNavLink Href="/Account/Login" Icon="@Icons.Material.Filled.Login" Match="NavLinkMatch.Prefix">Login
+            </MudNavLink>
+        </NotAuthorized>
+    </AuthorizeView>
 </MudNavMenu>
 
 @code {
@@ -86,4 +58,5 @@
     {
         NavigationManager.LocationChanged -= OnLocationChanged;
     }
+
 }
