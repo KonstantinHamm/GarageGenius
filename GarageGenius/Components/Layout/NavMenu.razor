@@ -3,7 +3,6 @@
 @inject NavigationManager NavigationManager
 
 <MudNavMenu Bordered="true" Margin="Margin.Normal" Rounded="true">
-
     <AuthorizeView>
         <Authorized>
             <MudNavLink Href="/dashboard" Icon="@Icons.Material.Filled.DashboardCustomize" Match="NavLinkMatch.All">
@@ -24,7 +23,7 @@
                 <MudNavLink Href="/settings" Icon="@Icons.Material.Filled.SettingsApplications"
                             Match="NavLinkMatch.Prefix">App-Einstellungen
                 </MudNavLink>
-                <MudNavLink Href="/account" Icon="@Icons.Material.Filled.ManageAccounts" Match="NavLinkMatch.Prefix">
+                <MudNavLink Href="/manage_account" Icon="@Icons.Material.Filled.ManageAccounts" Match="NavLinkMatch.Prefix">
                     Account
                 </MudNavLink>
             </MudNavGroup>
@@ -40,17 +39,17 @@
 </MudNavMenu>
 
 @code {
-    private string? currentUrl;
+    private string? _currentUrl;
 
     protected override void OnInitialized()
     {
-        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        _currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
         NavigationManager.LocationChanged += OnLocationChanged;
     }
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
-        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        _currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
         StateHasChanged();
     }
 
@@ -58,5 +57,4 @@
     {
         NavigationManager.LocationChanged -= OnLocationChanged;
     }
-
 }
