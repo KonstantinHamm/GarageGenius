@@ -42,7 +42,6 @@ if (app.Environment.IsDevelopment())
 else
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -57,21 +56,22 @@ app.UseAuthorization();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-app.MapGet("/Account/Login", async (HttpContext httpContext, string returnUrl = "/") =>
+app.MapGet("/Account/Login", async void (HttpContext httpContext, string returnUrl = "/") =>
 {
-    var authenticationProperties = new LoginAuthenticationPropertiesBuilder()
-        .WithRedirectUri(returnUrl)
-        .Build();
+    try
+    {
+        var authenticationProperties = new LoginAuthenticationPropertiesBuilder()
+            .WithRedirectUri(returnUrl)
+            .Build();
 
-    authenticationProperties.IsPersistent = true;
-    await httpContext.ChallengeAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
+        authenticationProperties.IsPersistent = true;
+        await httpContext.ChallengeAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
+    }
+    catch (Exception e)
+    {
+        throw; 
+    }
 });
-
-// app.MapPost("/logout", async (HttpContext httpContext) =>
-// {
-//     await httpContext.SignOutAsync(Auth0Constants.AuthenticationScheme);
-//     await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-// });
 
 app.MapPost("/logout", async context =>
 {
