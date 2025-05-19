@@ -1,6 +1,7 @@
 ﻿@implements IDisposable
 
 @inject NavigationManager NavigationManager
+@inject IHttpClientFactory HttpClientFactory
 
 <MudNavMenu Bordered="true" Margin="Margin.Normal" Rounded="true">
     <AuthorizeView>
@@ -27,8 +28,14 @@
                     Account
                 </MudNavLink>
             </MudNavGroup>
-            <MudNavLink Href="/logout" Icon="@Icons.Material.Filled.Logout" Match="NavLinkMatch.Prefix">Logout
-            </MudNavLink>
+
+            <form action="/logout" method="post">
+                <AntiforgeryToken/>
+                <input type="hidden" name="ReturnUrl" value=""/>
+                <button type="submit" class="mud-nav-link mud-ripple">
+                    <MudIcon Icon="@Icons.Material.Filled.Logout" Color="Color.Info" Class="mr-3"></MudIcon> Logout
+                </button>
+            </form>
         </Authorized>
         <NotAuthorized>
             <MudNavLink Href="/" Icon="@Icons.Material.Filled.Home" Match="NavLinkMatch.All">Home</MudNavLink>
@@ -53,6 +60,14 @@
         StateHasChanged();
     }
 
+    private async Task Logout()
+    {
+        // var client = HttpClientFactory.CreateClient();
+        // client.BaseAddress = new Uri(NavigationManager.BaseUri); 
+        // await client.PostAsync("/logout", null);
+        // NavigationManager.NavigateTo("/", forceLoad: true);
+    }
+    
     public void Dispose()
     {
         NavigationManager.LocationChanged -= OnLocationChanged;

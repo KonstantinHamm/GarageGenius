@@ -11,6 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddMudServices();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddHttpClient();
 builder.Services.AddTransient<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddAuth0WebAppAuthentication(options =>
 {
@@ -19,7 +20,6 @@ builder.Services.AddAuth0WebAppAuthentication(options =>
     options.Scope = "openid profile email";
 });
 
-// Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 builder.Services.AddScoped<TokenProvider>();
@@ -67,10 +67,19 @@ app.MapGet("/Account/Login", async (HttpContext httpContext, string returnUrl = 
     await httpContext.ChallengeAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
 });
 
-app.MapPost("/logout", async (HttpContext httpContext) =>
+// app.MapPost("/logout", async (HttpContext httpContext) =>
+// {
+//     await httpContext.SignOutAsync(Auth0Constants.AuthenticationScheme);
+//     await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+// });
+
+app.MapPost("/logout", async context =>
 {
-    await httpContext.SignOutAsync(Auth0Constants.AuthenticationScheme);
-    await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    await context.SignOutAsync(
+        Auth0Constants.AuthenticationScheme,
+        new AuthenticationProperties { RedirectUri = "/" }
+    );
 });
 
 app.Run();
