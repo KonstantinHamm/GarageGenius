@@ -2,13 +2,22 @@ using Auth0.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using GarageGenius.Components;
 using GarageGenius.Data;
-using GarageGenius.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using MudBlazor.Services;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var fileLogger = new LoggerConfiguration()
+    .WriteTo.File(
+        "Logs/log-.txt",
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 90
+    )
+    .CreateLogger();
+
+builder.Host.UseSerilog(fileLogger);
 builder.Services.AddMudServices();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
@@ -22,7 +31,6 @@ builder.Services.AddAuth0WebAppAuthentication(options =>
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
-builder.Services.AddScoped<TokenProvider>();
 
 builder.Services.AddCascadingAuthenticationState();
 
@@ -33,8 +41,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 var app = builder.Build();
-
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
@@ -56,7 +62,7 @@ app.UseAuthorization();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-app.MapGet("/Account/Login", async void (HttpContext httpContext, string returnUrl = "/") =>
+app.MapGet("/Account/Login", async Task (HttpContext httpContext, ILogger<Program> logger, string returnUrl = "/") =>
 {
     try
     {
@@ -69,17 +75,29 @@ app.MapGet("/Account/Login", async void (HttpContext httpContext, string returnU
     }
     catch (Exception e)
     {
-        throw; 
+        logger.LogError(e, "Fehler beim Login.");
+        throw;
     }
 });
 
-app.MapPost("/logout", async context =>
+app.MapPost("/logout", async (HttpContext context, ILogger<Program> logger) =>
 {
-    await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-    await context.SignOutAsync(
-        Auth0Constants.AuthenticationScheme,
-        new AuthenticationProperties { RedirectUri = "/" }
-    );
+    try
+    {
+        await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        await context.SignOutAsync(
+            Auth0Constants.AuthenticationScheme,
+            new AuthenticationProperties { RedirectUri = "/" }
+        );
+        logger.LogInformation("User wurde erfolgreich ausgeloggt.");
+        return Results.Ok();
+    }
+    catch (Exception ex)
+    {
+        const string errorMessage = "Error logging out.";
+        logger.LogError(ex, errorMessage);
+        return Results.Problem(errorMessage);
+    }
 });
 
 app.Run();
