@@ -90,7 +90,7 @@ app.MapPost("/logout", async (HttpContext context, ILogger<Program> logger) =>
             new AuthenticationProperties { RedirectUri = "/" }
         );
         logger.LogInformation("User wurde erfolgreich ausgeloggt.");
-        return Results.Ok();
+        return Results.Redirect("/");
     }
     catch (Exception ex)
     {

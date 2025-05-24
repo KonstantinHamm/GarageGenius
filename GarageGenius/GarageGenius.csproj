@@ -122,6 +122,8 @@
 
     <ItemGroup>
       <Folder Include="Data\Migrations\" />
+      <Folder Include="Logs\" />
+      <Folder Include="Models\" />
       <Folder Include="Services\" />
     </ItemGroup>
 
