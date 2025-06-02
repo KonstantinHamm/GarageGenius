@@ -2,10 +2,16 @@ namespace GarageGenius.Common.Models;
 
 public class WorkshopLogEntry
 {
-    public Vehicle? Vehicle { get; set; }
+    public int Id { get; set; }
     public DateTime EntryDate { get; set; }
     public string? Notes { get; set; }
-    public GarageDevice? RecordingDevice { get; set; }
     public uint KmAtVisit { get; set; }
-    public IDictionary<string, string>? Images { get; set; } = new Dictionary<string, string>();
+    
+    public int VehicleId { get; set; }
+    public virtual Vehicle Vehicle { get; set; } = null!;
+    
+    public int? GarageDeviceId { get; set; }
+    public virtual GarageDevice? RecordingDevice { get; set; }
+    
+    public virtual ICollection<WorkshopLogEntryImage> Images { get; set; } = new List<WorkshopLogEntryImage>();
 }
