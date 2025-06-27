@@ -15,6 +15,7 @@ var fileLogger = new LoggerConfiguration()
         rollingInterval: RollingInterval.Day,
         retainedFileCountLimit: 90
     )
+	.WriteTo.Console()
     .CreateLogger();
 
 builder.Host.UseSerilog(fileLogger);

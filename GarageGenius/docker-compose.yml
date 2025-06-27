@@ -2,32 +2,44 @@ version: '3.8'
 
 services:
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "5000:80"    # HTTP Mapping
       - "5001:443"   # HTTPS Mapping
     depends_on:
       - postgres
     volumes:
-      - ~/RiderProjects/GarageGenius_Certs/certificate.pfx:/https/certificate.pfx:ro
+      # Verwende das lokale certs Verzeichnis statt eines externen Pfads
+      - ./certs:/https:ro
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: "https://+:443;http://+:80"
       ASPNETCORE_HTTPS_PORT: "443"
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=GarageGenius;Username=geniusUser;Password=geniusPassword"
-      ASPNETCORE_Kestrel__Certificates__Default__Path: /https/certificate.pfx
-      ASPNETCORE_Kestrel__Certificates__Default__Password: "Tog2Phon"
+      # Passe den Pfad an das Volume-Mapping an
+      ASPNETCORE_Kestrel__Certificates__Default__Path: /https/garagegenius.pfx
+      ASPNETCORE_Kestrel__Certificates__Default__Password: "Sommer123"
+    restart: unless-stopped
 
   postgres:
-    image: postgres:latest
+    image: postgres:15-alpine
     ports:
       - "5433:5432"
     environment:
       POSTGRES_DB: GarageGenius
       POSTGRES_USER: geniusUser
       POSTGRES_PASSWORD: geniusPassword
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U geniusUser -d GarageGenius"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   postgres_data:

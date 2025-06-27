@@ -44,9 +44,9 @@
                                     <MudTh>Postal Code</MudTh>
                                 </HeaderContent>
                                 <RowTemplate>
-                                    <MudTd DataLabel="Address Line 1">@AddressContext.Address_Line_1</MudTd>
-                                    <MudTd DataLabel="Address Line 2">@AddressContext.Address_Line_2</MudTd>
-                                    <MudTd DataLabel="Postal Code">@AddressContext.Postal_Code</MudTd>
+                                    <MudTd DataLabel="Address Line 1">@AddressContext.AddressLineOne</MudTd>
+                                    <MudTd DataLabel="Address Line 2">@AddressContext.AddressLineTwo</MudTd>
+                                    <MudTd DataLabel="Postal Code">@AddressContext.PostalCode</MudTd>
                                 </RowTemplate>
                             </MudTable>
                         </MudCardContent>
@@ -65,26 +65,26 @@
 
     public class Address
     {
-        public string Address_Line_1 { get; set; }
-        public string Address_Line_2 { get; set; }
-        public int Postal_Code { get; set; }
+        public string? AddressLineOne { get; set; }
+        public string? AddressLineTwo { get; set; }
+        public int PostalCode { get; set; }
     }
 
     public class Person
     {
         public bool ShowDetails { get; set; }
         public int Number { get; set; }
-        public string Name { get; set; }
+        public required string Name { get; set; }
         public int Age { get; set; }
-        public IList<Address> Addresses { get; set; }
+        public IList<Address>? Addresses { get; set; }
     }
 
     private void FillPeople()
     {
         IList<Person> people = new List<Person>();
         IList<Address> addresses = new List<Address>();
-        addresses.Add(new Address { Address_Line_1 = "4 Privet Drive", Address_Line_2 = "Little Whinging", Postal_Code = 111 });
-        addresses.Add(new Address { Address_Line_1 = "12 Grimmauld Place", Address_Line_2 = "The Burrow", Postal_Code = 333 });
+        addresses.Add(new Address { AddressLineOne = "4 Privet Drive", AddressLineTwo = "Little Whinging", PostalCode = 111 });
+        addresses.Add(new Address { AddressLineOne = "12 Grimmauld Place", AddressLineTwo = "The Burrow", PostalCode = 333 });
         people.Add(new Person
         {
             ShowDetails = false,
@@ -95,8 +95,8 @@
         });
 
         addresses = new List<Address>();
-        addresses.Add(new Address { Address_Line_1 = "123 Pikachu Lane", Address_Line_2 = "Pallet Town", Postal_Code = 777 });
-        addresses.Add(new Address { Address_Line_1 = "456 Mew Street", Address_Line_2 = "Pallet Town", Postal_Code = 999 });
+        addresses.Add(new Address { AddressLineOne = "123 Pikachu Lane", AddressLineTwo = "Pallet Town", PostalCode = 777 });
+        addresses.Add(new Address { AddressLineOne = "456 Mew Street", AddressLineTwo = "Pallet Town", PostalCode = 999 });
         people.Add(new Person
         {
             ShowDetails = false,
@@ -108,9 +108,9 @@
         People = people;
 
         addresses = new List<Address>();
-        addresses.Add(new Address { Address_Line_1 = "123 Shire Lane", Address_Line_2 = "Bag End", Postal_Code = 223 });
-        addresses.Add(new Address { Address_Line_1 = "456 Shire Street", Address_Line_2 = "Bag End", Postal_Code = 445 });
-        addresses.Add(new Address { Address_Line_1 = "789 Shire Avenue", Address_Line_2 = "Bag End", Postal_Code = 667 });
+        addresses.Add(new Address { AddressLineOne = "123 Shire Lane", AddressLineTwo = "Bag End", PostalCode = 223 });
+        addresses.Add(new Address { AddressLineOne = "456 Shire Street", AddressLineTwo = "Bag End", PostalCode = 445 });
+        addresses.Add(new Address { AddressLineOne = "789 Shire Avenue", AddressLineTwo = "Bag End", PostalCode = 667 });
         people.Add(new Person
         {
             ShowDetails = true,
@@ -122,11 +122,14 @@
         People = people;
     }
 
-    private static IEnumerable<Person> People { get; set; }
+    private static IEnumerable<Person>? People { get; set; }
 
     private void ShowBtnPress(int nr)
     {
-        Person tmpPerson = People.First(f => f.Number == nr);
-        tmpPerson.ShowDetails = !tmpPerson.ShowDetails;
+        if (People != null)
+        {
+            Person tmpPerson = People.First(f => f.Number == nr);
+            tmpPerson.ShowDetails = !tmpPerson.ShowDetails;
+        }
     }
 }

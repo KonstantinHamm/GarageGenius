@@ -7,7 +7,6 @@
 **/.toolstarget
 **/.vs
 **/.vscode
-**/.idea
 **/*.*proj.user
 **/*.dbmdl
 **/*.jfm
@@ -23,3 +22,4 @@
 **/values.dev.yaml
 LICENSE
 README.md
+!certs/

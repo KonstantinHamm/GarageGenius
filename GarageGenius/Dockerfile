@@ -1,5 +1,5 @@
 ﻿# Use the official .NET SDK image as a build stage
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
@@ -16,12 +16,28 @@ RUN dotnet build "GarageGenius.csproj" -c $BUILD_CONFIGURATION -o /app/build
 RUN dotnet publish "GarageGenius.csproj" -c $BUILD_CONFIGURATION -o /app/publish
 
 # Use the official ASP.NET Core runtime image as a base image
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 WORKDIR /app
+
+# Copy the published application
 COPY --from=build /app/publish .
 
-# Expose port 80
-EXPOSE 80 443
+# Copy SSL certificates
+COPY certs/ /app/certs/
 
-# Start the application
-ENTRYPOINT ["dotnet", "GarageGenius.dll"]
+# Create directory for certificates and set permissions
+RUN mkdir -p /https && \
+    chmod 755 /https
+
+# Expose ports
+EXPOSE 80
+EXPOSE 443
+
+# Set environment variables for HTTPS
+ENV ASPNETCORE_URLS="https://+:443;http://+:80"
+ENV ASPNETCORE_Kestrel__Certificates__Default__Path="/certs/garagegenius.pfx"
+ENV ASPNETCORE_Kestrel__Certificates__Default__Password="Sommer123"
+
+# Set the entry point and command
+ENTRYPOINT ["dotnet"]
+CMD ["GarageGenius.dll"]
