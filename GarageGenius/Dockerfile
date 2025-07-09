@@ -22,9 +22,6 @@ WORKDIR /app
 # Copy the published application
 COPY --from=build /app/publish .
 
-# Copy SSL certificates
-COPY certs/ /app/certs/
-
 # Create directory for certificates and set permissions
 RUN mkdir -p /https && \
     chmod 755 /https
@@ -33,10 +30,8 @@ RUN mkdir -p /https && \
 EXPOSE 80
 EXPOSE 443
 
-# Set environment variables for HTTPS
+# Set environment variables for HTTPS (these will be overridden by docker-compose)
 ENV ASPNETCORE_URLS="https://+:443;http://+:80"
-ENV ASPNETCORE_Kestrel__Certificates__Default__Path="/certs/garagegenius.pfx"
-ENV ASPNETCORE_Kestrel__Certificates__Default__Password="Sommer123"
 
 # Set the entry point and command
 ENTRYPOINT ["dotnet"]

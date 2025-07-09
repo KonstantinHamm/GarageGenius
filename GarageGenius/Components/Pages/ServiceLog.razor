@@ -1,135 +1,137 @@
 @page "/servicelog"
-<h3>ServiceLog</h3>
+@using System.Globalization
 
-<MudTable Items="@People" Hover="true" Breakpoint="Breakpoint.Sm">
-    <ColGroup>
-        <col style="width:100px;" />
-        <col style="width:100px;" />
-        <col />
-        <col style="width:300px;" />
-    </ColGroup>
-    <HeaderContent>
-        <MudTh>Nr</MudTh>
-        <MudTh>Name</MudTh>
-        <MudTh>Kennzeichen</MudTh>
-        <MudTh></MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd DataLabel="Nr">@context.Number</MudTd>
-        <MudTd DataLabel="Name">@context.Name</MudTd>
-        <MudTd DataLabel="Kennzeichen">@context.Age</MudTd>
-        <MudTd><MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => ShowBtnPress(context.Number))">@(context.ShowDetails? "Hide" : "Show") Address Details</MudButton></MudTd>
-    </RowTemplate>
-    <ChildRowContent>
-        @if (context.ShowDetails)
-        {
-            <MudTr>
-                <td colspan="4">
-                    <MudCard Elevation="0">
-                        <MudCardHeader>
-                            <CardHeaderContent>
-                                <MudText Typo="Typo.body1">Address Details for <strong>@context.Name</strong></MudText>
-                            </CardHeaderContent>
-                        </MudCardHeader>
-                        <MudCardContent Class="pa-0">
-                            <MudTable Items="@context.Addresses" Context="AddressContext" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0">
-                                <ColGroup>
-                                    <col />
-                                    <col />
-                                    <col style="width:200px;" />
-                                </ColGroup>
-                                <HeaderContent>
-                                    <MudTh>Address Line 1</MudTh>
-                                    <MudTh>Address Line 2</MudTh>
-                                    <MudTh>Postal Code</MudTh>
-                                </HeaderContent>
-                                <RowTemplate>
-                                    <MudTd DataLabel="Address Line 1">@AddressContext.AddressLineOne</MudTd>
-                                    <MudTd DataLabel="Address Line 2">@AddressContext.AddressLineTwo</MudTd>
-                                    <MudTd DataLabel="Postal Code">@AddressContext.PostalCode</MudTd>
-                                </RowTemplate>
-                            </MudTable>
-                        </MudCardContent>
-                    </MudCard>
-                </td>
-            </MudTr>
-        }
-    </ChildRowContent>
-</MudTable>
+<MudPaper Width="100%">
+    <MudContainer MaxWidth="MaxWidth.Large">
+        <MudGrid>
+            <MudItem xs="2">
+                <MudPaper Style="height:90vh;">
+                    <MudTextField @bind-Value="customerSearch" Placeholder="Kunde suchen..." Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"/>
+                    <MudList T="Customer">
+                        @foreach (var customer in FilteredCustomers)
+                        {
+                            <MudListItem T="Customer" Selected="@(_selectedCustomer == customer)"
+                                         @onclick="() => SelectCustomer(customer)">
+                                <ChildContent>
+                                    <div>@customer.Name</div>
+                                    <div style="font-size:x-small;color:gray;">@customer.Description</div>
+                                </ChildContent>
+                            </MudListItem>
+                        }
+                    </MudList>
+
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="2">
+                <MudPaper Style="height:90vh;">
+                    <MudDatePicker @bind-Date="serviceFilterDate" Label="Nach Datum filtern" DateFormat="dd.MM.yyyy"
+                                   Clearable="true"/>
+                    <MudList T="ServiceVisit">
+                        @if (_selectedCustomer != null)
+                        {
+                            @foreach (var visit in FilteredVisits)
+                            {
+                                <MudListItem T="ServiceVisit" Selected="@(_selectedVisit == visit)"
+                                             @onclick="() => SelectVisit(visit)">
+                                    <ChildContent>
+                                        <div>@visit.Date.ToString("dd.MM.yyyy")</div>
+                                        <div style="font-size:x-small;color:gray;">@visit.Reason</div>
+                                    </ChildContent>
+                                </MudListItem>
+                            }
+                        }
+                    </MudList>
+
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="8">
+                <MudPaper Style="height:90vh;">
+                    @if (_selectedVisit != null)
+                    {
+                        <h3>Dokumentation: @(_selectedVisit.Date.ToString("dd.MM.yyyy"))</h3>
+                        <div>@_selectedVisit.Notes</div>
+                        <MudGrid>
+                            @foreach (var img in _selectedVisit.Images)
+                            {
+                                <MudItem xs="2">
+                                    <MudImage Src="@img" Style="max-width:100%;max-height:120px;"/>
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    }
+                    else
+                    {
+                        <p>Bitte einen Werkstattaufenthalt auswählen.</p>
+                    }
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
+</MudPaper>
 
 @code {
-        protected override void OnInitialized()
+    public class Customer
     {
-        FillPeople();
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public List<ServiceVisit> Visits { get; set; } = new();
     }
 
-    public class Address
+    public class ServiceVisit
     {
-        public string? AddressLineOne { get; set; }
-        public string? AddressLineTwo { get; set; }
-        public int PostalCode { get; set; }
+        public DateTime Date { get; set; }
+        public string Reason { get; set; }
+        public string Notes { get; set; }
+        public List<string> Images { get; set; } = new();
     }
 
-    public class Person
+    List<Customer> customers = new()
     {
-        public bool ShowDetails { get; set; }
-        public int Number { get; set; }
-        public required string Name { get; set; }
-        public int Age { get; set; }
-        public IList<Address>? Addresses { get; set; }
-    }
-
-    private void FillPeople()
-    {
-        IList<Person> people = new List<Person>();
-        IList<Address> addresses = new List<Address>();
-        addresses.Add(new Address { AddressLineOne = "4 Privet Drive", AddressLineTwo = "Little Whinging", PostalCode = 111 });
-        addresses.Add(new Address { AddressLineOne = "12 Grimmauld Place", AddressLineTwo = "The Burrow", PostalCode = 333 });
-        people.Add(new Person
+        new Customer
         {
-            ShowDetails = false,
-            Number = 1,
-            Name = "Harry Potter",
-            Age = 11,
-            Addresses = addresses
-        });
-
-        addresses = new List<Address>();
-        addresses.Add(new Address { AddressLineOne = "123 Pikachu Lane", AddressLineTwo = "Pallet Town", PostalCode = 777 });
-        addresses.Add(new Address { AddressLineOne = "456 Mew Street", AddressLineTwo = "Pallet Town", PostalCode = 999 });
-        people.Add(new Person
+            Name = "Max Mustermann", Description = "Audi A4, Baujahr 2020", Visits = new()
+            {
+                new ServiceVisit { Date = DateTime.Now.AddDays(-130), Reason = "Routine Service", Notes = "Ölwechsel etc.", Images = new() { "images/felge1.jpg", "images/kotfluegel1.jpg" } },
+                new ServiceVisit { Date = DateTime.Now.AddDays(-12), Reason = "Reifenwechsel", Notes = "Winterreifen montiert.", Images = new() { "images/reifen1.jpg" } }
+            }
+        },
+        new Customer
         {
-            ShowDetails = false,
-            Number = 2,
-            Name = "Ash Ketchum",
-            Age = 18,
-            Addresses = addresses
-        });
-        People = people;
-
-        addresses = new List<Address>();
-        addresses.Add(new Address { AddressLineOne = "123 Shire Lane", AddressLineTwo = "Bag End", PostalCode = 223 });
-        addresses.Add(new Address { AddressLineOne = "456 Shire Street", AddressLineTwo = "Bag End", PostalCode = 445 });
-        addresses.Add(new Address { AddressLineOne = "789 Shire Avenue", AddressLineTwo = "Bag End", PostalCode = 667 });
-        people.Add(new Person
-        {
-            ShowDetails = true,
-            Number = 3,
-            Name = "Frodo Baggins",
-            Age = 24,
-            Addresses = addresses
-        });
-        People = people;
-    }
-
-    private static IEnumerable<Person>? People { get; set; }
-
-    private void ShowBtnPress(int nr)
-    {
-        if (People != null)
-        {
-            Person tmpPerson = People.First(f => f.Number == nr);
-            tmpPerson.ShowDetails = !tmpPerson.ShowDetails;
+            Name = "Erika Beispiel", Description = "VW Golf 7, BJ 2018", Visits = new()
+            {
+                new ServiceVisit { Date = DateTime.Now.AddDays(-30), Reason = "Inspektion", Notes = "Bremsen erneuert.", Images = new() { "images/bremse1.jpg", "images/kotfluegel2.jpg" } }
+            }
         }
+    };
+
+    Customer _selectedCustomer;
+    ServiceVisit _selectedVisit;
+
+    string customerSearch;
+    DateTime? serviceFilterDate;
+
+    IEnumerable<Customer> FilteredCustomers =>
+        string.IsNullOrWhiteSpace(customerSearch)
+            ? customers
+            : customers.Where(c =>
+                c.Name.Contains(customerSearch, StringComparison.OrdinalIgnoreCase) ||
+                (!string.IsNullOrEmpty(c.Description) && c.Description.Contains(customerSearch, StringComparison.OrdinalIgnoreCase)));
+
+    IEnumerable<ServiceVisit> FilteredVisits =>
+        _selectedCustomer?.Visits
+            .Where(v => !serviceFilterDate.HasValue || v.Date.Date == serviceFilterDate.Value.Date)
+        ?? [];
+
+    void SelectCustomer(Customer c)
+    {
+        _selectedCustomer = c;
+        _selectedVisit = null;
+        serviceFilterDate = null;
+    }
+
+    void SelectVisit(ServiceVisit visit)
+    {
+        _selectedVisit = visit;
     }
 }
