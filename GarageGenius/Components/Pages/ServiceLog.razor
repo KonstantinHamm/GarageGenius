@@ -9,12 +9,13 @@
         <MudGrid>
             <MudItem xs="2">
                 <MudPaper Style="height:90vh;">
-                    <MudTextField @bind-Value="_customerSearch" Placeholder="Kunde suchen..." Adornment="Adornment.Start"
+                    <MudTextField @bind-Value="_customerSearch" Placeholder="Kunde suchen..."
+                                  Adornment="Adornment.Start"
                                   AdornmentIcon="@Icons.Material.Filled.Search"/>
                     <MudList T="Customer">
                         @foreach (var customer in FilteredCustomers)
                         {
-                            <MudListItem T="Customer" Selected="@(_selectedCustomer == customer)"
+                            <MudListItem T="Customer" Value="customer"
                                          @onclick="() => SelectCustomer(customer)">
                                 <ChildContent>
                                     <div>@customer.Name</div>
@@ -29,12 +30,12 @@
                 <MudPaper Style="height:90vh;">
                     <MudDatePicker @bind-Date="_serviceFilterDate" Label="Nach Datum filtern" DateFormat="dd.MM.yyyy"
                                    Clearable="true"/>
-                    <MudList T="ServiceVisit">
+                    <MudList T="ServiceVisit" @bind-SelectedValue="_selectedVisit">
                         @if (_selectedCustomer != null)
                         {
                             @foreach (var visit in FilteredVisits)
                             {
-                                <MudListItem T="ServiceVisit" Selected="@(_selectedVisit == visit)"
+                                <MudListItem T="ServiceVisit" Value="visit"
                                              @onclick="() => SelectVisit(visit)">
                                     <ChildContent>
                                         <div>@visit.EntryDate.ToString("dd.MM.yyyy")</div>
@@ -64,6 +65,7 @@
                                 @_selectedVisit.Vehicle.ChassisNumber @_selectedVisit.Vehicle.LicensePlate
                             </div>
                         }
+
                         <div>@_selectedVisit.Notes</div>
                         <MudGrid>
                             @foreach (var img in _selectedVisit.Images)
@@ -85,20 +87,25 @@
 </MudPaper>
 
 @code {
+
     readonly List<Customer> _customers =
     [
         new()
         {
             Name = "Max Mustermann", Note = "Sohn von Alois Mustermann", Visits = new()
             {
-                new ServiceVisit { EntryDate = DateTime.Now.AddDays(-130), Reason = "Routine Service", Notes = "Ölwechsel etc.", Vehicle = new Vehicle
+                new ServiceVisit
                 {
-                    Brand = "VW",
-                    Model = "Golf 4",
-                    ChassisNumber = "W0L000051T2123456",
-                    LicensePlate = "MK-MM 1234",
-                    Notes = "Achtung liegt tiefer als Oma! Bitte Auffahrrampe verwenden"
-                },Images = new List<WorkshopLogEntryImage>() { } },
+                    EntryDate = DateTime.Now.AddDays(-130), Reason = "Routine Service", Notes = "Ölwechsel etc.", Vehicle = new Vehicle
+                    {
+                        Brand = "VW",
+                        Model = "Golf 4",
+                        ChassisNumber = "W0L000051T2123456",
+                        LicensePlate = "MK-MM 1234",
+                        Notes = "Achtung liegt tiefer als Oma! Bitte Auffahrrampe verwenden"
+                    },
+                    Images = new List<WorkshopLogEntryImage>() { }
+                },
                 new ServiceVisit { EntryDate = DateTime.Now.AddDays(-12), Reason = "Reifenwechsel", Notes = "Winterreifen montiert.", Images = new List<WorkshopLogEntryImage>() { } }
             }
         },
@@ -128,20 +135,20 @@
     string? _customerSearch;
     DateTime? _serviceFilterDate;
 
-    protected override async Task OnInitializedAsync()
-    {
-        var customers = await CustomerRepo.GetCustomersWithVisitsAsync();
-    }
-    
+    // protected override async Task OnInitializedAsync()
+    // {
+    //     var customers = await CustomerRepo.GetCustomersWithVisitsAsync();
+    // }
+
     IEnumerable<Customer> FilteredCustomers =>
         string.IsNullOrWhiteSpace(_customerSearch)
             ? _customers
             : _customers.Where(c =>
-                c.Name != null && (c.Name.Contains(_customerSearch, 
+                c.Name != null && (c.Name.Contains(_customerSearch,
                                        StringComparison.OrdinalIgnoreCase) ||
-                                        (!string.IsNullOrEmpty(c.Note) &&
-                                        c.Note.Contains(_customerSearch, 
-                                            StringComparison.OrdinalIgnoreCase))));
+                                   (!string.IsNullOrEmpty(c.Note) &&
+                                    c.Note.Contains(_customerSearch,
+                                        StringComparison.OrdinalIgnoreCase))));
 
     IEnumerable<ServiceVisit> FilteredVisits =>
         _selectedCustomer?.Visits
@@ -159,4 +166,5 @@
     {
         _selectedVisit = visit;
     }
+
 }
