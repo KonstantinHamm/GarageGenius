@@ -1,7 +1,7 @@
 using Auth0.AspNetCore.Authentication;
+using GarageGenius.Common.Data;
 using Microsoft.EntityFrameworkCore;
 using GarageGenius.Components;
-using GarageGenius.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using MudBlazor.Services;
@@ -15,13 +15,15 @@ var fileLogger = new LoggerConfiguration()
         rollingInterval: RollingInterval.Day,
         retainedFileCountLimit: 90
     )
-	.WriteTo.Console()
+    .WriteTo.Console()
     .CreateLogger();
 
 builder.Host.UseSerilog(fileLogger);
 builder.Services.AddMudServices();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddTransient<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddAuth0WebAppAuthentication(options =>
 {

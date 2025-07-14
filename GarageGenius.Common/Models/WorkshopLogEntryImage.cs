@@ -6,5 +6,5 @@ public class WorkshopLogEntryImage
     public string Key { get; set; } = null!; 
     public string Value { get; set; } = null!;
     public int WorkshopLogEntryId { get; set; }
-    public virtual WorkshopLogEntry WorkshopLogEntry { get; set; } = null!;
+    public virtual ServiceVisit ServiceVisit { get; set; } = null!;
 }

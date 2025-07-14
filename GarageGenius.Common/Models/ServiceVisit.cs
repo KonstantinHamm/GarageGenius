@@ -1,15 +1,14 @@
 namespace GarageGenius.Common.Models;
 
-public class WorkshopLogEntry
+public class ServiceVisit
 {
     public int Id { get; set; }
     public DateTime EntryDate { get; set; }
     public string? Notes { get; set; }
+    public string? Reason { get; set; }
     public uint KmAtVisit { get; set; }
-    
     public int VehicleId { get; set; }
-    public virtual Vehicle Vehicle { get; set; } = null!;
-    
+    public virtual Vehicle? Vehicle { get; set; }
     public int? GarageDeviceId { get; set; }
     public virtual GarageDevice? RecordingDevice { get; set; }
     

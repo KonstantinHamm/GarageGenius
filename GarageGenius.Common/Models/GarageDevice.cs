@@ -8,5 +8,5 @@ public class GarageDevice
     public string? DeviceName { get; set; }
     public DateTime RegisterDate { get; set; }
     public DateTime LastLogin { get; set; }
-    public virtual ICollection<WorkshopLogEntry> WorkshopLogEntries { get; set; } = new List<WorkshopLogEntry>();
+    public virtual ICollection<ServiceVisit> WorkshopLogEntries { get; set; } = new List<ServiceVisit>();
 }

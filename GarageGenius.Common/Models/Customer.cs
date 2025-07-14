@@ -4,5 +4,6 @@ public class Customer
 {
     public int Id { get; set; }
     public string? Name { get; set; }
-    public virtual ICollection<Vehicle> Vehicles { get; set; } = new List<Vehicle>();
+    public string? Note { get; set; }
+    public virtual List<ServiceVisit> Visits { get; set; } = [];
 }
