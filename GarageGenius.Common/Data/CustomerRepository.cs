@@ -9,4 +9,10 @@ public class CustomerRepository(ApplicationDbContext context) : Repository<Custo
     {
         return await DbSet.Include(c => c.Visits).ToListAsync();
     }
+
+    public async Task UpdateCustomerAsync(Customer customer)
+    {
+        DbSet.Update(customer);
+        await context.SaveChangesAsync();
+    }
 }
