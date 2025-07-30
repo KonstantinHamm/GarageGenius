@@ -7,7 +7,11 @@ public class CustomerRepository(ApplicationDbContext context) : Repository<Custo
 {
     public async Task<IEnumerable<Customer>> GetCustomersWithVisitsAsync()
     {
-        return await DbSet.Include(c => c.Visits).ToListAsync();
+        return await DbSet
+            .Include(c => c.Vehicles)
+            .ThenInclude(v => v.ServiceVisits)
+            .ToListAsync();
+
     }
 
     public async Task UpdateCustomerAsync(Customer customer)

@@ -10,4 +10,5 @@ public class Vehicle
     public int CustomerId { get; set; }
     public string? Notes { get; set; }
     public virtual Customer Customer { get; set; } = null!;
+    public virtual ICollection<ServiceVisit> ServiceVisits { get; set; } = new List<ServiceVisit>();
 }

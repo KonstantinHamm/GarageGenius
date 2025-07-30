@@ -7,10 +7,11 @@ public class ServiceVisit
     public string? Notes { get; set; }
     public string? Reason { get; set; }
     public uint KmAtVisit { get; set; }
-    public int VehicleId { get; set; }
-    public virtual Vehicle? Vehicle { get; set; }
+    public int? CustomerId { get; set; }
+    public virtual Customer? Customer { get; set; }
     public int? GarageDeviceId { get; set; }
     public virtual GarageDevice? RecordingDevice { get; set; }
-    
     public virtual ICollection<WorkshopLogEntryImage> Images { get; set; } = new List<WorkshopLogEntryImage>();
+    public int VehicleId { get; set; }
+    public virtual Vehicle Vehicle { get; set; } = null!;
 }

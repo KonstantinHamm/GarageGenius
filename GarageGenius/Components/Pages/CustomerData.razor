@@ -1,0 +1,85 @@
+@page "/customer_data"
+
+@inject Common.Data.ICustomerRepository CustomerRepository
+@using GarageGenius.Common.Models
+@using GarageGenius.Components.Dialogs
+@inject IDialogService DialogService
+
+<MudPaper>
+    <MudContainer>
+        <MudGrid>
+            <MudGrid>
+                <MudButton @onclick="AddCustomerAsync" Variant="Variant.Filled" Color="Color.Primary">
+                    Open simple dialog
+                </MudButton>
+            </MudGrid>
+            <MudTable xs="12" Items="@customers" @ref="_table" Editable="true" RowEditCommit="OnEditCommit">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">Kunden</MudText>
+                    <MudSpacer/>
+                    <MudTextField @bind-Value="searchString" Placeholder="Suche..." Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search" Class="mt-0"/>
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>Id</MudTh>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Notiz</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Id">@context.Id</MudTd>
+                    <MudTd DataLabel="Name">
+                        <MudTextField @bind-Value="context.Name" Immediate="true" Margin="Margin.Dense"/>
+                    </MudTd>
+                    <MudTd DataLabel="Notiz">
+                        <MudTextField @bind-Value="context.Note" Immediate="true" Margin="Margin.Dense"/>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudGrid>
+    </MudContainer>
+</MudPaper>
+
+@code {
+    private List<Customer> customers = new();
+    private MudTable<Customer>? _table;
+    private string? searchString = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var allCustomers = await CustomerRepository.GetCustomersWithVisitsAsync();
+        customers = allCustomers.ToList();
+    }
+
+    private Task AddCustomerAsync()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+
+        return DialogService.ShowAsync<AddCustomerDialog>("Simple Dialog", options);
+    }
+    
+    private bool FilterFunc(Customer customer)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (customer.Name?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true)
+            return true;
+        if (customer.Note?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true)
+            return true;
+        return false;
+    }
+
+    private async void OnEditCommit(object? item)
+    {
+        try
+        {
+            if (item is Customer customer)
+            {
+                await CustomerRepository.UpdateCustomerAsync(customer);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Optional: Snackbar, Logging, etc.
+        }
+    }
+}
