@@ -5,6 +5,8 @@ namespace GarageGenius.Common.Data;
 
 public class CustomerRepository(ApplicationDbContext context) : Repository<Customer>(context), ICustomerRepository
 {
+    private readonly ApplicationDbContext _context = context;
+
     public async Task<IEnumerable<Customer>> GetCustomersWithVisitsAsync()
     {
         return await DbSet
@@ -17,6 +19,6 @@ public class CustomerRepository(ApplicationDbContext context) : Repository<Custo
     public async Task UpdateCustomerAsync(Customer customer)
     {
         DbSet.Update(customer);
-        await context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
     }
 }

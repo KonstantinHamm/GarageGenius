@@ -1,43 +1,42 @@
 @page "/customer_data"
 
-@inject Common.Data.ICustomerRepository CustomerRepository
 @using GarageGenius.Common.Models
 @using GarageGenius.Components.Dialogs
+
+@inject Common.Data.ICustomerRepository CustomerRepository
 @inject IDialogService DialogService
 
-<MudPaper>
-    <MudContainer>
-        <MudGrid>
-            <MudGrid>
-                <MudButton @onclick="AddCustomerAsync" Variant="Variant.Filled" Color="Color.Primary">
-                    Open simple dialog
-                </MudButton>
-            </MudGrid>
-            <MudTable xs="12" Items="@customers" @ref="_table" Editable="true" RowEditCommit="OnEditCommit">
-                <ToolBarContent>
-                    <MudText Typo="Typo.h6">Kunden</MudText>
-                    <MudSpacer/>
-                    <MudTextField @bind-Value="searchString" Placeholder="Suche..." Adornment="Adornment.Start"
-                                  AdornmentIcon="@Icons.Material.Filled.Search" Class="mt-0"/>
-                </ToolBarContent>
-                <HeaderContent>
-                    <MudTh>Id</MudTh>
-                    <MudTh>Name</MudTh>
-                    <MudTh>Notiz</MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd DataLabel="Id">@context.Id</MudTd>
-                    <MudTd DataLabel="Name">
-                        <MudTextField @bind-Value="context.Name" Immediate="true" Margin="Margin.Dense"/>
-                    </MudTd>
-                    <MudTd DataLabel="Notiz">
-                        <MudTextField @bind-Value="context.Note" Immediate="true" Margin="Margin.Dense"/>
-                    </MudTd>
-                </RowTemplate>
-            </MudTable>
-        </MudGrid>
-    </MudContainer>
-</MudPaper>
+<MudContainer>
+    <MudPaper>
+        <MudButton @onclick="AddCustomerAsync" StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Outlined"
+                   Color="Color.Primary" Class="mb-2" IconColor="Color.Primary">
+            Kunden anlegen
+        </MudButton>
+        <MudTable xs="12" Items="@customers" @ref="_table" Editable="true" RowEditCommit="OnEditCommit">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Kunden</MudText>
+                <MudSpacer/>
+                <MudTextField @bind-Value="searchString" Placeholder="Suche..." Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" Class="mt-0"/>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Id</MudTh>
+                <MudTh>Name</MudTh>
+                <MudTh>Notiz</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Id">@context.Id</MudTd>
+                <MudTd DataLabel="Name">
+                    <MudTextField @bind-Value="context.Name" Immediate="true" Margin="Margin.Dense"/>
+                </MudTd>
+                <MudTd DataLabel="Notiz">
+                    <MudTextField @bind-Value="context.Note" Immediate="true" Margin="Margin.Dense"/>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
+</MudContainer>
+
 
 @code {
     private List<Customer> customers = new();
@@ -56,7 +55,7 @@
 
         return DialogService.ShowAsync<AddCustomerDialog>("Simple Dialog", options);
     }
-    
+
     private bool FilterFunc(Customer customer)
     {
         if (string.IsNullOrWhiteSpace(searchString))
@@ -82,4 +81,5 @@
             // Optional: Snackbar, Logging, etc.
         }
     }
+
 }

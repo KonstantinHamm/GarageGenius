@@ -1,23 +1,27 @@
 ﻿@using GarageGenius.Components.Themes
 @inherits LayoutComponentBase
 
-<MudThemeProvider Theme="BootsWatchYeti.YetiTheme" IsDarkMode="@ToggleDarkMode"/>
-<MudPopoverProvider />
-<MudDialogProvider />
-<MudSnackbarProvider />
+@* <MudThemeProvider Theme="BootsWatchYeti.YetiTheme" IsDarkMode="@ToggleDarkMode"/> *@
+<MudThemeProvider IsDarkMode="@ToggleDarkMode"/>
+<MudPopoverProvider/>
+<MudDialogProvider/>
+<MudSnackbarProvider/>
 <MudLayout>
     <MudAppBar>
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-        <MudSpacer />
-        <MudSwitch @bind-Value="ToggleDarkMode" ThumbIcon="@(ToggleDarkMode ? Icons.Material.Filled.NightsStay : 
-    Icons.Material.Filled.LightMode)" ThumbIconColor="@(ToggleDarkMode ? Color.Success : Color.Warning)">Dark/Bright</MudSwitch>
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
+                       OnClick="@((e) => DrawerToggle())"/>
+        <MudSpacer/>
+        <MudSwitch @bind-Value="ToggleDarkMode"
+                   ThumbIcon="@(ToggleDarkMode ? Icons.Material.Filled.NightsStay : Icons.Material.Filled.LightMode)"
+                   ThumbIconColor="@(ToggleDarkMode ? Color.Success : Color.Warning)">Dark/Bright
+        </MudSwitch>
 
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen">
         <MudDrawerHeader>
             <MudText Typo="Typo.h6">GaragePal</MudText>
         </MudDrawerHeader>
-        <NavMenu />
+        <NavMenu/>
     </MudDrawer>
     <MudMainContent>
         <MudContainer MaxWidth="MaxWidth.Large" Class="my-16 pt-16">
@@ -46,4 +50,5 @@
     {
         StateHasChanged();
     }
+
 }

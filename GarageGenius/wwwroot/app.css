@@ -49,3 +49,7 @@ h1:focus {
 .darker-border-checkbox.form-check-input {
     border-color: #929292;
 }
+
+.mud-button .mud-icon-root {
+    color: inherit; /* Erbt die Farbe des Buttons (korrekt bei IconColor gesetzt) */
+}
