@@ -6,15 +6,16 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using MudBlazor.Services;
 using Serilog;
+using Serilog.Formatting.Compact;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Antiforgery;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Service-Registrierung (ALLE müssen vor .Build() passieren!)
-builder.Services.AddEndpointsApiExplorer(); // <-- belassen!
-builder.Services.AddSwaggerGen(opt => // <-- belassen!
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(opt =>
 {
     opt.SwaggerDoc("v1", new OpenApiInfo
     {
@@ -23,28 +24,29 @@ builder.Services.AddSwaggerGen(opt => // <-- belassen!
     });
 });
 
-var fileLogger = new LoggerConfiguration()
-    .WriteTo.File(
-        "Logs/log-.txt",
-        rollingInterval: RollingInterval.Day,
-        retainedFileCountLimit: 90
-    )
-    .WriteTo.Console()
-    .CreateLogger();
+if (builder.Environment.IsDevelopment())
+{
+    builder.Logging.AddConsole();
+    builder.Logging.AddDebug();
+}
+else
+{
+    // Todo: No premature performance optimization, deshalb 
+    // wird hier erst weitergearbeitet, wenn production in Sicht ist
+    builder.Host.UseSerilog((_, lc) => lc.WriteTo.Console());
+}
 
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-builder.Host.UseSerilog(fileLogger);
 builder.Services.AddMudServices();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
-builder.Services.AddTransient<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddAuth0WebAppAuthentication(options =>
 {
-    options.Domain    = builder.Configuration["Auth0:Domain"]  ?? throw new InvalidOperationException();
-    options.ClientId  = builder.Configuration["Auth0:ClientId"]?? throw new InvalidOperationException();
-    options.Scope     = "openid profile email";
+    options.Domain = builder.Configuration["Auth0:Domain"] ?? throw new InvalidOperationException();
+    options.ClientId = builder.Configuration["Auth0:ClientId"] ?? throw new InvalidOperationException();
+    options.Scope = "openid profile email";
 
     options.OpenIdConnectEvents = new()
     {
@@ -60,17 +62,17 @@ builder.Services.AddAuth0WebAppAuthentication(options =>
                 if (!identity.HasClaim(ClaimTypes.Role, rc.Value))
                     identity.AddClaim(new Claim(ClaimTypes.Role, rc.Value));
             }
+
             return Task.CompletedTask;
         }
     };
 });
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("OfficeOnly", policy =>
-        policy.RequireAuthenticatedUser()
-            .RequireClaim("https://garagepal.app/roles", "office"));
-});
+var auth = builder.Services.AddAuthorizationBuilder();
+
+auth.AddPolicy("OfficeOnly", policy =>
+    policy.RequireAuthenticatedUser()
+        .RequireRole("office"));
 
 builder.Services.ConfigureApplicationCookie(o =>
 {
@@ -91,7 +93,6 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.WebHost.UseStaticWebAssets();
 
-// Wichtig: AB HIER NICHT MEHR builder.Services verwenden!
 var app = builder.Build();
 
 // --- AB HIER NUR NOCH Pipeline/Endpoint-Definition ---
@@ -99,10 +100,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
-    app.UseSwaggerUI(c =>  
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "GarageGenius API v1");
-    });
+    app.UseSwaggerUI(c => { c.SwaggerEndpoint("/swagger/v1/swagger.json", "GarageGenius API v1"); });
 }
 else
 {
@@ -112,15 +110,25 @@ else
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseRouting();
+
 app.UseAntiforgery();
+
+app.MapGet("/antiforgery-token", (IAntiforgery af, HttpContext ctx) =>
+    {
+        var tokens = af.GetAndStoreTokens(ctx);
+        return Results.Ok(new { token = tokens.RequestToken });
+    })
+    .RequireAuthorization();
+
 
 GarageGenius.Api.Endpoints.Map(app);
 
 app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+    .AddInteractiveServerRenderMode()
+    .RequireAuthorization("OfficeOnly");
 
 app.MapGet("/Account/Login", async Task (HttpContext httpContext, ILogger<Program> logger, string returnUrl = "/") =>
 {
@@ -158,6 +166,6 @@ app.MapPost("/logout", async (HttpContext context, ILogger<Program> logger) =>
         logger.LogError(ex, errorMessage);
         return Results.Problem(errorMessage);
     }
-});
+}).RequireAuthorization();
 
 app.Run();

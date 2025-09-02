@@ -37,7 +37,6 @@
     </MudPaper>
 </MudContainer>
 
-
 @code {
     private List<Customer> customers = new();
     private MudTable<Customer>? _table;
@@ -52,7 +51,6 @@
     private Task AddCustomerAsync()
     {
         var options = new DialogOptions { CloseOnEscapeKey = true };
-
         return DialogService.ShowAsync<AddCustomerDialog>("Simple Dialog", options);
     }
 
@@ -81,5 +79,4 @@
             // Optional: Snackbar, Logging, etc.
         }
     }
-
 }
