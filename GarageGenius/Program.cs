@@ -6,13 +6,14 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using MudBlazor.Services;
 using Serilog;
-using Serilog.Formatting.Compact;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Antiforgery;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((_, lc) => lc.WriteTo.Console());
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(opt =>
@@ -23,18 +24,6 @@ builder.Services.AddSwaggerGen(opt =>
         Version = "v1"
     });
 });
-
-if (builder.Environment.IsDevelopment())
-{
-    builder.Logging.AddConsole();
-    builder.Logging.AddDebug();
-}
-else
-{
-    // Todo: No premature performance optimization, deshalb 
-    // wird hier erst weitergearbeitet, wenn production in Sicht ist
-    builder.Host.UseSerilog((_, lc) => lc.WriteTo.Console());
-}
 
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 builder.Services.AddMudServices();

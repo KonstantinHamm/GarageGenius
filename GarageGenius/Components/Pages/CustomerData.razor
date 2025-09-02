@@ -5,6 +5,7 @@
 
 @inject Common.Data.ICustomerRepository CustomerRepository
 @inject IDialogService DialogService
+@inject ILogger<CustomerData> Logger
 
 <MudContainer>
     <MudPaper>
@@ -48,10 +49,25 @@
         customers = allCustomers.ToList();
     }
 
-    private Task AddCustomerAsync()
+    private async Task AddCustomerAsync()
     {
-        var options = new DialogOptions { CloseOnEscapeKey = true };
-        return DialogService.ShowAsync<AddCustomerDialog>("Simple Dialog", options);
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+            CloseButton = true,
+            Position = DialogPosition.Center,
+            NoHeader = false,
+            BackdropClick = false
+        };
+         var dialogReference = await DialogService.ShowAsync<AddCustomerDialog>("Kunden erstellen", options);
+         var result = await dialogReference.Result;
+
+         if (result is { Canceled: false })
+         {
+             
+         }
     }
 
     private bool FilterFunc(Customer customer)
@@ -60,9 +76,7 @@
             return true;
         if (customer.Name?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true)
             return true;
-        if (customer.Note?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true)
-            return true;
-        return false;
+        return customer.Note?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true;
     }
 
     private async void OnEditCommit(object? item)
@@ -76,7 +90,7 @@
         }
         catch (Exception ex)
         {
-            // Optional: Snackbar, Logging, etc.
+            Logger.LogError(ex, "Error in OnEditCommit.");
         }
     }
 }

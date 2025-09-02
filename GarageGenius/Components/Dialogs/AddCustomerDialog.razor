@@ -1,9 +1,15 @@
+@using GarageGenius.Common.Models
 <MudDialog>
     <TitleContent>
-        Dialog Title
+        Kunde erstellen
     </TitleContent>
     <DialogContent>
-        Dialog Content
+        <MudGrid>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="_newCustomer.Name" Label="Kundenname" Variant="Variant.Outlined"/>
+                <MudTextField @bind-Value="_newCustomer.Note" Label="Notiz" Variant="Variant.Outlined"/>
+            </MudItem>
+        </MudGrid>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
@@ -12,8 +18,8 @@
 </MudDialog>
 
 @code {
-    [CascadingParameter]
-    private IMudDialogInstance? MudDialog { get; set; }
+    private readonly Customer _newCustomer = new();
+    [CascadingParameter] private IMudDialogInstance? MudDialog { get; set; }
 
     private void Submit() => MudDialog?.Close(DialogResult.Ok(true));
 
