@@ -1,5 +1,6 @@
 @page "/customer_data"
 
+@using GarageGenius.Common.Extensions
 @using GarageGenius.Common.Models
 @using GarageGenius.Components.Dialogs
 
@@ -13,12 +14,14 @@
                    Color="Color.Primary" Class="mb-2" IconColor="Color.Primary">
             Kunden anlegen
         </MudButton>
-        <MudTable xs="12" Items="@_customers" @ref="_table"  RowEditCommit="OnEditCommit">
+        <MudTable xs="12" Items="@_customers"  
+                  RowEditCommit="OnEditCommit" Filter="new Func<Customer,bool>(FilterFunc)" @bind-SelectedItem="_selectedCustomer"> 
             <ToolBarContent>
                 <MudText Typo="Typo.h6">Kunden</MudText>
                 <MudSpacer/>
                 <MudTextField @bind-Value="_searchString" Placeholder="Suche..." Adornment="Adornment.Start"
-                              AdornmentIcon="@Icons.Material.Filled.Search" Class="mt-0"/>
+                              AdornmentIcon="@Icons.Material.Filled.Search" Class="mt-0"
+                              Immediate="true" DebounceInterval="200"/>
             </ToolBarContent>
             <HeaderContent>
                 <MudTh>Id</MudTh>
@@ -40,15 +43,14 @@
 
 @code {
     private List<Customer> _customers = new();
-    private MudTable<Customer>? _table;
-    private string? _searchString = "";
+    private string? _searchString = string.Empty;
+    private Customer? _selectedCustomer;
 
     protected override async Task OnInitializedAsync()
     {
-        var allCustomers = await CustomerRepository.GetCustomersWithVisitsAsync();
-        _customers = allCustomers.ToList();
+        await UpdateCustomerCollection();
     }
-
+    
     private async Task AddCustomerAsync()
     {
         var options = new DialogOptions
@@ -62,37 +64,47 @@
             BackdropClick = false
         };
         var dialogReference = await DialogService.ShowAsync<AddCustomerDialog>("Kunden erstellen", options);
-         var result = await dialogReference.Result;
+        var result = await dialogReference.Result;
 
-         if (result is { Canceled: false, Data: Customer user })
-         {
-             await CustomerRepository.AddAsync(user);
-             await CustomerRepository.SaveChangesAsync();
-             StateHasChanged();
-         }
+        if (result is { Canceled: false, Data: Customer user })
+        {
+            await CustomerRepository.AddAsync(user);
+            await CustomerRepository.SaveChangesAsync();
+            await UpdateCustomerCollection();
+            StateHasChanged();   
+        }
     }
-
-    private bool FilterFunc(Customer customer)
+    
+    private async Task UpdateCustomerCollection()
     {
-        if (string.IsNullOrWhiteSpace(_searchString))
-            return true;
-        if (customer.Name?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) == true)
-            return true;
-        return customer.Note?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) == true;
+        if (await CustomerRepository.GetCustomersWithVisitsAsync() is List<Customer> updatedCustomers && updatedCustomers.Any())
+            _customers = updatedCustomers.ToList();
     }
+
+    private bool FilterFunc(Customer customer, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+
+        return (customer.Name?.Like(searchString) == true) ||
+               (customer.Note?.Like(searchString) == true);
+    }
+
+
+    private bool FilterFunc(Customer customer) => _searchString != null && FilterFunc(customer, _searchString);
 
     private async void OnEditCommit(object? item)
     {
         try
         {
-            if (item is Customer customer)
-            {
-                await CustomerRepository.UpdateCustomerAsync(customer);
-            }
+            if (item is not Customer customer) return;
+            
+            await CustomerRepository.UpdateCustomerAsync(customer);
+            await CustomerRepository.SaveChangesAsync();
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error in OnEditCommit.");
+            Logger.LogError(ex, "Could not update User in Database.");
         }
     }
 }
