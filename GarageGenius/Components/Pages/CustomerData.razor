@@ -13,11 +13,11 @@
                    Color="Color.Primary" Class="mb-2" IconColor="Color.Primary">
             Kunden anlegen
         </MudButton>
-        <MudTable xs="12" Items="@customers" @ref="_table" Editable="true" RowEditCommit="OnEditCommit">
+        <MudTable xs="12" Items="@_customers" @ref="_table"  RowEditCommit="OnEditCommit">
             <ToolBarContent>
                 <MudText Typo="Typo.h6">Kunden</MudText>
                 <MudSpacer/>
-                <MudTextField @bind-Value="searchString" Placeholder="Suche..." Adornment="Adornment.Start"
+                <MudTextField @bind-Value="_searchString" Placeholder="Suche..." Adornment="Adornment.Start"
                               AdornmentIcon="@Icons.Material.Filled.Search" Class="mt-0"/>
             </ToolBarContent>
             <HeaderContent>
@@ -39,14 +39,14 @@
 </MudContainer>
 
 @code {
-    private List<Customer> customers = new();
+    private List<Customer> _customers = new();
     private MudTable<Customer>? _table;
-    private string? searchString = "";
+    private string? _searchString = "";
 
     protected override async Task OnInitializedAsync()
     {
         var allCustomers = await CustomerRepository.GetCustomersWithVisitsAsync();
-        customers = allCustomers.ToList();
+        _customers = allCustomers.ToList();
     }
 
     private async Task AddCustomerAsync()
@@ -54,29 +54,31 @@
         var options = new DialogOptions
         {
             CloseOnEscapeKey = true,
-            MaxWidth = MaxWidth.Small,
+            MaxWidth = MaxWidth.ExtraLarge,
             FullWidth = true,
             CloseButton = true,
             Position = DialogPosition.Center,
             NoHeader = false,
             BackdropClick = false
         };
-         var dialogReference = await DialogService.ShowAsync<AddCustomerDialog>("Kunden erstellen", options);
+        var dialogReference = await DialogService.ShowAsync<AddCustomerDialog>("Kunden erstellen", options);
          var result = await dialogReference.Result;
 
-         if (result is { Canceled: false })
+         if (result is { Canceled: false, Data: Customer user })
          {
-             
+             await CustomerRepository.AddAsync(user);
+             await CustomerRepository.SaveChangesAsync();
+             StateHasChanged();
          }
     }
 
     private bool FilterFunc(Customer customer)
     {
-        if (string.IsNullOrWhiteSpace(searchString))
+        if (string.IsNullOrWhiteSpace(_searchString))
             return true;
-        if (customer.Name?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true)
+        if (customer.Name?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) == true)
             return true;
-        return customer.Note?.Contains(searchString, StringComparison.OrdinalIgnoreCase) == true;
+        return customer.Note?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) == true;
     }
 
     private async void OnEditCommit(object? item)

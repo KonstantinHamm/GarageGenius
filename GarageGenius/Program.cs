@@ -10,6 +10,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,7 +38,7 @@ builder.Services.AddAuth0WebAppAuthentication(options =>
     options.ClientId = builder.Configuration["Auth0:ClientId"] ?? throw new InvalidOperationException();
     options.Scope = "openid profile email";
 
-    options.OpenIdConnectEvents = new()
+    options.OpenIdConnectEvents = new OpenIdConnectEvents
     {
         OnTokenValidated = ctx =>
         {
@@ -51,7 +52,6 @@ builder.Services.AddAuth0WebAppAuthentication(options =>
                 if (!identity.HasClaim(ClaimTypes.Role, rc.Value))
                     identity.AddClaim(new Claim(ClaimTypes.Role, rc.Value));
             }
-
             return Task.CompletedTask;
         }
     };
