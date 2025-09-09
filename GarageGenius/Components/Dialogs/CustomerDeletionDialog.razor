@@ -1,0 +1,16 @@
+@using GarageGenius.Common.Models
+<MudDialog>
+    <DialogContent>
+        <MudText>
+            Are you sure you want to delete this customer?
+            <br />
+            Customer name: @Customer?.Name
+        </MudText>
+    </DialogContent>
+</MudDialog>
+
+
+@code {
+    [CascadingParameter] private IMudDialogInstance? MudDialog { get; set; }
+    [Parameter] public Customer? Customer { get; set; }
+}

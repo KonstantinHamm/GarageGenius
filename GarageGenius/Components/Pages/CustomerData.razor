@@ -9,13 +9,14 @@
 @inject ILogger<CustomerData> Logger
 
 <MudContainer>
+    <MudButton @onclick="AddCustomerAsync" StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Outlined"
+               Color="Color.Primary" Class="mb-2" IconColor="Color.Primary">
+        Kunden anlegen
+    </MudButton>
     <MudPaper>
-        <MudButton @onclick="AddCustomerAsync" StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Outlined"
-                   Color="Color.Primary" Class="mb-2" IconColor="Color.Primary">
-            Kunden anlegen
-        </MudButton>
-        <MudTable xs="12" Items="@_customers"  
-                  RowEditCommit="OnEditCommit" Filter="new Func<Customer,bool>(FilterFunc)" @bind-SelectedItem="_selectedCustomer"> 
+        <MudTable xs="12" Items="@_customers"
+                  RowEditCommit="OnEditCommit" Filter="new Func<Customer, bool>(FilterFunc)"
+                  @bind-SelectedItem="_selectedCustomer">
             <ToolBarContent>
                 <MudText Typo="Typo.h6">Kunden</MudText>
                 <MudSpacer/>
@@ -27,6 +28,7 @@
                 <MudTh>Id</MudTh>
                 <MudTh>Name</MudTh>
                 <MudTh>Notiz</MudTh>
+                <MudTh>Aktion</MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Id">@context.Id</MudTd>
@@ -35,6 +37,14 @@
                 </MudTd>
                 <MudTd DataLabel="Notiz">
                     <MudTextField @bind-Value="context.Note" Immediate="true" Margin="Margin.Dense"/>
+                </MudTd>
+                <MudTd>
+                    <MudIconButton OnClick="@(() => ShowEditCustomerDialogAsync(context))"
+                                   Icon="@Icons.Material.Filled.Edit"
+                                   aria-label="edit"/>
+                    <MudIconButton Onclick="@(() => ShowCustomerDeletionDialogAsync(context))"
+                                   Icon="@Icons.Material.Filled.Delete" Color="Color.Secondary"
+                                   aria-label="delete"/>
                 </MudTd>
             </RowTemplate>
         </MudTable>
@@ -50,7 +60,7 @@
     {
         await UpdateCustomerCollection();
     }
-    
+
     private async Task AddCustomerAsync()
     {
         var options = new DialogOptions
@@ -71,10 +81,10 @@
             await CustomerRepository.AddAsync(user);
             await CustomerRepository.SaveChangesAsync();
             await UpdateCustomerCollection();
-            StateHasChanged();   
+            StateHasChanged();
         }
     }
-    
+
     private async Task UpdateCustomerCollection()
     {
         if (await CustomerRepository.GetCustomersWithVisitsAsync() is List<Customer> updatedCustomers && updatedCustomers.Any())
@@ -90,7 +100,6 @@
                (customer.Note?.Like(searchString) == true);
     }
 
-
     private bool FilterFunc(Customer customer) => _searchString != null && FilterFunc(customer, _searchString);
 
     private async void OnEditCommit(object? item)
@@ -98,7 +107,7 @@
         try
         {
             if (item is not Customer customer) return;
-            
+
             await CustomerRepository.UpdateCustomerAsync(customer);
             await CustomerRepository.SaveChangesAsync();
         }
@@ -107,4 +116,59 @@
             Logger.LogError(ex, "Could not update User in Database.");
         }
     }
+
+    private async Task ShowCustomerDeletionDialogAsync(Customer customer)
+    {
+        // Öffnet einen Dialog, in dem man den Namen des Kunden 
+        // Angeben muss um diesen auch wirklich zu löschen.
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            CloseButton = true,
+            Position = DialogPosition.Center,
+            NoHeader = false,
+            BackdropClick = false
+        };
+
+        var parameters = new DialogParameters
+        {
+            ["Customer"] = customer
+        };
+
+        var dialogReference = await DialogService.ShowAsync<CustomerDeletionDialog>(
+            "Kunden löschen",
+            parameters,
+            options);
+        var result = await dialogReference.Result;
+    }
+
+    private async Task ShowEditCustomerDialogAsync(Customer customer)
+    {
+        // Öffnet einen Dialog, in dem man den Kunden usw. Editieren kann
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            CloseButton = true,
+            Position = DialogPosition.Center,
+            NoHeader = false,
+            BackdropClick = false
+        };
+
+        var parameters = new DialogParameters
+        {
+            ["Customer"] = customer
+        };
+
+
+        var dialogReference = await DialogService.ShowAsync<EditCustomerDialog>(
+            "Kunden editieren",
+            parameters,
+            options);
+        var result = await dialogReference.Result;
+    }
+
 }

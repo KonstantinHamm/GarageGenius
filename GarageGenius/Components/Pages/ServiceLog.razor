@@ -94,7 +94,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // Hier echte Daten laden, Beziehungen beachten!
         var customers = await CustomerRepo.GetCustomersWithVisitsAsync();
         _customers = customers.ToList();
     }
