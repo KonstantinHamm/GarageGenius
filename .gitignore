@@ -343,7 +343,14 @@ healthchecksdb
 # Backup folder for Package Reference Convert tool in Visual Studio 2017
 MigrationBackup/
 
+# Common IntelliJ Platform excludes
 
+# User specific
+**/.idea/**/workspace.xml
+**/.idea/**/tasks.xml
+**/.idea/shelf/*
+**/.idea/dictionaries
+**/.idea/httpRequests/
 
 ## VS CODE
 .vscode/*
@@ -405,6 +412,13 @@ out/
 # JIRA plugin
 atlassian-ide-plugin.xml
 
+# Rider
+# Rider auto-generates .iml files, and contentModel.xml
+**/.idea/**/*.iml
+**/.idea/**/contentModel.xml
+**/.idea/**/modules.xml
+**/.idea/
+
 # Cursive Clojure plugin
 .idea/replstate.xml
 
@@ -413,6 +427,10 @@ com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 fabric.properties
+
+Thumbs.db
+Desktop.ini
+.DS_Store
 
 # Editor-based Rest Client
 .idea/httpRequests

@@ -1,0 +1,32 @@
+@page "/devices"
+
+<h3>Devices</h3>
+
+<MudGrid>
+    <MudItem xs="12">
+        @*Oben oben, außerhalb eines Mud-Papers befinden sich folgende Buttons:*@
+        @*Linksbündig:*@
+        @*1. Button "Gerät hinzufügen" (Icon: Plus) - öffnet ein Dialogfenster mit einem Formular zur Eingabe der Gerätedaten.*@
+        @*2. Button "Filter" - hier kann der User z.B. nach Standort oder Plattform filtern.*@
+        
+        @*Rechtsbündig:*@
+        @*Textsuche*@
+    </MudItem>
+    <MudItem xs="12">
+        <MudPaper Class="d-flex align-center justify-center mud-width-full py-8">
+            @*Hier muss eine Tabelle mit allen angelegten Geräten angezeigt werden. Es sollte Pagination verwendet werden*@
+            @*Die Tabelle sollte die folgenden Spalten enthalten:*@
+            @*1. Spalte: Name des Geräts -> Wird vom User festgelegt*@
+            @*2. Spalte: Plattform des Geräts -> Wird aus dem Gerät ausgelesen*@
+            @*3. Spalte: Letztes Anmeldedatum -> Wird beim einloggen in Datenbank abgelegt (vom Gerät)*@
+            @*4. Spalte: Eindeutiger Identifizierer -> Wird aus dem Gerät ausgelesen *@
+            @*5. Spalte: Standort -> Wird beim anlegen vom User angegeben*@
+            @*4. Spalte: Aktionen*@
+            @*In den Aktionen befinden sich die beiden Buttons zum Löschen und Editieren des Geräteeintrags*@
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    
+}

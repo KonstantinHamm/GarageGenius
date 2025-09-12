@@ -1,0 +1,174 @@
+@page "/customer_data"
+
+@using GarageGenius.Common.Extensions
+@using GarageGenius.Common.Models
+@using GarageGenius.Components.Dialogs
+
+@inject Common.Data.ICustomerRepository CustomerRepository
+@inject IDialogService DialogService
+@inject ILogger<CustomerData> Logger
+
+<MudContainer>
+    <MudButton @onclick="AddCustomerAsync" StartIcon="@Icons.Material.Filled.Add" Variant="Variant.Outlined"
+               Color="Color.Primary" Class="mb-2" IconColor="Color.Primary">
+        Kunden anlegen
+    </MudButton>
+    <MudPaper>
+        <MudTable xs="12" Items="@_customers"
+                  RowEditCommit="OnEditCommit" Filter="new Func<Customer, bool>(FilterFunc)"
+                  @bind-SelectedItem="_selectedCustomer">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Kunden</MudText>
+                <MudSpacer/>
+                <MudTextField @bind-Value="_searchString" Placeholder="Suche..." Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" Class="mt-0"
+                              Immediate="true" DebounceInterval="200"/>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Id</MudTh>
+                <MudTh>Name</MudTh>
+                <MudTh>Notiz</MudTh>
+                <MudTh>Aktion</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Id">@context.Id</MudTd>
+                <MudTd DataLabel="Name">
+                    <MudTextField @bind-Value="context.Name" Immediate="true" Margin="Margin.Dense"/>
+                </MudTd>
+                <MudTd DataLabel="Notiz">
+                    <MudTextField @bind-Value="context.Note" Immediate="true" Margin="Margin.Dense"/>
+                </MudTd>
+                <MudTd>
+                    <MudIconButton OnClick="@(() => ShowEditCustomerDialogAsync(context))"
+                                   Icon="@Icons.Material.Filled.Edit"
+                                   aria-label="edit"/>
+                    <MudIconButton Onclick="@(() => ShowCustomerDeletionDialogAsync(context))"
+                                   Icon="@Icons.Material.Filled.Delete" Color="Color.Secondary"
+                                   aria-label="delete"/>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private List<Customer> _customers = new();
+    private string? _searchString = string.Empty;
+    private Customer? _selectedCustomer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UpdateCustomerCollection();
+    }
+
+    private async Task AddCustomerAsync()
+    {
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullWidth = true,
+            CloseButton = true,
+            Position = DialogPosition.Center,
+            NoHeader = false,
+            BackdropClick = false
+        };
+        var dialogReference = await DialogService.ShowAsync<AddCustomerDialog>("Kunden erstellen", options);
+        var result = await dialogReference.Result;
+
+        if (result is { Canceled: false, Data: Customer user })
+        {
+            await CustomerRepository.AddAsync(user);
+            await CustomerRepository.SaveChangesAsync();
+            await UpdateCustomerCollection();
+            StateHasChanged();
+        }
+    }
+
+    private async Task UpdateCustomerCollection()
+    {
+        if (await CustomerRepository.GetCustomersWithVisitsAsync() is List<Customer> updatedCustomers && updatedCustomers.Any())
+            _customers = updatedCustomers.ToList();
+    }
+
+    private bool FilterFunc(Customer customer, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+
+        return (customer.Name?.Like(searchString) == true) ||
+               (customer.Note?.Like(searchString) == true);
+    }
+
+    private bool FilterFunc(Customer customer) => _searchString != null && FilterFunc(customer, _searchString);
+
+    private async void OnEditCommit(object? item)
+    {
+        try
+        {
+            if (item is not Customer customer) return;
+
+            await CustomerRepository.UpdateCustomerAsync(customer);
+            await CustomerRepository.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Could not update User in Database.");
+        }
+    }
+
+    private async Task ShowCustomerDeletionDialogAsync(Customer customer)
+    {
+        // Öffnet einen Dialog, in dem man den Namen des Kunden 
+        // Angeben muss um diesen auch wirklich zu löschen.
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            CloseButton = true,
+            Position = DialogPosition.Center,
+            NoHeader = false,
+            BackdropClick = false
+        };
+
+        var parameters = new DialogParameters
+        {
+            ["Customer"] = customer
+        };
+
+        var dialogReference = await DialogService.ShowAsync<CustomerDeletionDialog>(
+            "Kunden löschen",
+            parameters,
+            options);
+        var result = await dialogReference.Result;
+    }
+
+    private async Task ShowEditCustomerDialogAsync(Customer customer)
+    {
+        // Öffnet einen Dialog, in dem man den Kunden usw. Editieren kann
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            CloseButton = true,
+            Position = DialogPosition.Center,
+            NoHeader = false,
+            BackdropClick = false
+        };
+
+        var parameters = new DialogParameters
+        {
+            ["Customer"] = customer
+        };
+
+
+        var dialogReference = await DialogService.ShowAsync<EditCustomerDialog>(
+            "Kunden editieren",
+            parameters,
+            options);
+        var result = await dialogReference.Result;
+    }
+
+}

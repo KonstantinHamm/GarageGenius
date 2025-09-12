@@ -1,0 +1,128 @@
+@page "/servicelog"
+@using GarageGenius.Common.Data
+@using GarageGenius.Common.Models
+@inject ICustomerRepository CustomerRepo
+
+<MudPaper Width="100%">
+    <MudContainer MaxWidth="MaxWidth.Large">
+        <MudGrid>
+            <MudItem xs="2">
+                <MudPaper Style="height:90vh;">
+                    <MudDatePicker @bind-Date="_serviceFilterDate" Label="Nach Datum filtern" DateFormat="dd.MM.yyyy"
+                                   Clearable="true"/>
+                    <MudList T="ServiceVisit" @bind-SelectedValue="_selectedVisit">
+                        @if (_selectedCustomer != null)
+                        {
+                            @foreach (var visit in FilteredVisits)
+                            {
+                                <MudListItem T="ServiceVisit" Value="visit"
+                                             @onclick="() => SelectVisit(visit)">
+                                    <ChildContent>
+                                        <div>@visit.EntryDate.ToString("dd.MM.yyyy")</div>
+                                        <div style="font-size:x-small;color:gray;">@visit.Reason</div>
+                                    </ChildContent>
+                                </MudListItem>
+                            }
+                        }
+                    </MudList>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="2">
+                <MudPaper Style="height:90vh;">
+                    <MudTextField @bind-Value="_customerSearch" Placeholder="Kunde suchen..."
+                                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"/>
+                    <MudList T="Customer">
+                        @foreach (var customer in FilteredCustomers)
+                        {
+                            <MudListItem T="Customer" Value="customer"
+                                         @onclick="() => SelectCustomer(customer)">
+                                <ChildContent>
+                                    <div>@customer.Name</div>
+                                    <div style="font-size:x-small;color:gray;">@customer.Note</div>
+                                </ChildContent>
+                            </MudListItem>
+                        }
+                    </MudList>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="8">
+                <MudPaper Style="height:90vh;">
+                    @if (_selectedVisit != null)
+                    {
+                        <h3>Dokumentation: @(_selectedVisit.EntryDate.ToString("dd.MM.yyyy"))</h3>
+                        <div>
+                            <b>Kunde:</b> @_selectedCustomer?.Name
+                        </div>
+                        <div>
+                            <b>Grund:</b> @_selectedVisit.Reason
+                        </div>
+                        @if (_selectedVisit?.Vehicle != null)
+                        {
+                            <div>
+                                <b>Fahrzeug:</b> @_selectedVisit.Vehicle.Brand @_selectedVisit.Vehicle.Model
+                                @_selectedVisit.Vehicle.ChassisNumber @_selectedVisit.Vehicle.LicensePlate
+                            </div>
+                        }
+
+                        <div>@_selectedVisit?.Notes</div>
+                        <MudGrid>
+                            @if (_selectedVisit?.Images != null)
+                            {
+                                foreach (var img in _selectedVisit.Images)
+                                {
+                                    @:<!-- Hier Bildanzeige einfügen -->
+                                }
+                            }
+                        </MudGrid>
+                    }
+                    else
+                    {
+                        <p>Bitte einen Werkstattaufenthalt auswählen.</p>
+                    }
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
+</MudPaper>
+
+@code {
+    private List<Customer> _customers = new();
+    private Customer? _selectedCustomer;
+    private ServiceVisit? _selectedVisit;
+    private string? _customerSearch;
+    private DateTime? _serviceFilterDate;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var customers = await CustomerRepo.GetCustomersWithVisitsAsync();
+        _customers = customers.ToList();
+    }
+
+    IEnumerable<Customer> FilteredCustomers =>
+        string.IsNullOrWhiteSpace(_customerSearch)
+            ? _customers
+            : _customers.Where(c =>
+                c.Name != null && (c.Name.Contains(_customerSearch, StringComparison.OrdinalIgnoreCase) ||
+                                   (!string.IsNullOrEmpty(c.Note) &&
+                                    c.Note.Contains(_customerSearch,
+                                        StringComparison.OrdinalIgnoreCase))));
+
+    IEnumerable<ServiceVisit> FilteredVisits =>
+        _selectedCustomer?.Vehicles
+            .SelectMany(v => v.ServiceVisits)
+            .Where(v => !_serviceFilterDate.HasValue ||
+                        v.EntryDate.Date == _serviceFilterDate.Value.Date) ?? Array.Empty<ServiceVisit>();
+
+    void SelectCustomer(Customer c)
+    {
+        _selectedCustomer = c;
+        _selectedVisit = null;
+        _serviceFilterDate = null;
+    }
+
+    void SelectVisit(ServiceVisit visit)
+    {
+        _selectedVisit = visit;
+    }
+
+}

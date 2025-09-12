@@ -1,0 +1,145 @@
+@using GarageGenius.Common.Models
+
+<MudDialog>
+    <TitleContent>
+        Kunde erstellen
+    </TitleContent>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12">
+                <MudPaper>
+                    <MudTextField @bind-Value="_newCustomer.Name" Label="Kundenname" Variant="Variant.Outlined"/>
+                    <MudTextField @bind-Value="_newCustomer.Note" Label="Notiz" Variant="Variant.Outlined"/>
+                    <MudList T="Vehicle" Dense="true" @bind-SelectedValue="_selectedVehicle">
+                        <MudListSubheader>Fahrzeuge</MudListSubheader>
+                        @if (_newCustomer.Vehicles.Count == 0)
+                        {
+                            <MudListItem T="Vehicle" Disabled="true">
+                                <MudText Typo="Typo.body2" Color=Color.Secondary>Keine Fahrzeuge hinzugefügt.</MudText>
+                            </MudListItem>
+                        }
+                        else
+                        {
+                            @foreach (var v in _newCustomer.Vehicles.ToList())
+                            {
+                                <MudListItem T="Vehicle" Value="@v">
+                                    <ChildContent>
+                                        <MudStack Row="true" AlignItems=AlignItems.Center Justify=Justify.SpaceBetween
+                                                  Class="w-100">
+                                            <MudText>@(v.LicensePlate ?? "Fahrzeug")</MudText>
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                           Color="Color.Error"
+                                                           OnClick="@(() => RemoveVehicle(v))">
+                                                Fahrzeug entfernen
+                                            </MudIconButton>
+                                        </MudStack>
+                                    </ChildContent>
+                                </MudListItem>
+                            }
+                        }
+                    </MudList>
+                    <MudStack Row="true" Spacing="2" Class="mt-2">
+                        <MudButton Color="Color.Error" Variant="Variant.Outlined" OnClick="ShowVehicleForm">
+                            Fahrzeug hinzufügen
+                        </MudButton>
+
+                        <MudButton Color="Color.Primary" Variant="Variant.Outlined"
+                                   Disabled="@(_selectedVehicle is null)"
+                                   OnClick="@(() => RemoveVehicle(_selectedVehicle))">
+                            Fahrzeug entfernen
+                        </MudButton>
+                    </MudStack>
+
+                    <MudCollapse Expanded="_showVehicleForm" Class="mt-4">
+                        <MudPaper Class="pa-4">
+                            <MudText Typo="Typo.h6" Class="mb-2">Fahrzeugdetails</MudText>
+                            <MudStack Spacing="2">
+                                <MudTextField @bind-Value=_newVehicleLicensePlate Label="Kennzeichen"
+                                              Variant="Variant.Outlined"/>
+                                <MudTextField @bind-Value=_newVehicleBrand Label="Marke (Optional)"
+                                              Variant="Variant.Outlined"/>
+                                <MudTextField @bind-Value=_newVehicleModel Label="Modell (Optional)"
+                                              Variant="Variant.Outlined"/>
+                                <MudTextField @bind-Value=_newVehicleChassisNumber
+                                              Label="Fahrgestellnummer (Optional)"
+                                              Variant="Variant.Outlined"/>
+                                <MudTextField @bind-Value=_newVehicleNotes Label="Notiz zum Fahrzeug (Optional)"
+                                              Variant="Variant.Outlined"/>
+                                <MudStack Row="true" Spacing="2">
+                                    <MudButton Disabled="CanAddVehicle" Color="Color.Primary" Variant="Variant.Filled"
+                                               OnClick="ConfirmAddVehicle">
+                                        Fahrzeug übernehmen
+                                    </MudButton>
+                                    <MudButton Color="Color.Secondary" Variant="Variant.Outlined"
+                                               OnClick="CancelAddVehicle">
+                                        Abbrechen
+                                    </MudButton>
+                                </MudStack>
+                            </MudStack>
+                        </MudPaper>
+                    </MudCollapse>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">OK</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private readonly Customer _newCustomer = new();
+    private Vehicle? _selectedVehicle;
+    private bool _showVehicleForm;
+    
+    private string? _newVehicleLicensePlate;
+    private string? _newVehicleBrand;
+    private string? _newVehicleModel;
+    private string? _newVehicleChassisNumber;
+    private string? _newVehicleNotes;
+
+    [CascadingParameter] private IMudDialogInstance? MudDialog { get; set; }
+    private bool CanAddVehicle => string.IsNullOrEmpty(_newVehicleLicensePlate);
+    
+    private void ShowVehicleForm()
+    {
+        _showVehicleForm = true;
+    }
+
+    private void ConfirmAddVehicle()
+    {
+        var newVehicle = new Vehicle
+        {
+            LicensePlate = _newVehicleLicensePlate,
+            Brand = _newVehicleBrand,
+            Model = _newVehicleModel,
+            ChassisNumber = _newVehicleChassisNumber,
+            Notes = _newVehicleNotes
+        };
+        
+        _newCustomer.Vehicles.Add(newVehicle);
+        _selectedVehicle = newVehicle;
+        _showVehicleForm = false;
+        StateHasChanged();
+    }
+
+    private void CancelAddVehicle()
+    {
+        _showVehicleForm = false;
+        StateHasChanged();
+    }
+
+    private void RemoveVehicle(Vehicle? vehicle)
+    {
+        if (vehicle is null) return;
+
+        _newCustomer.Vehicles.Remove(vehicle);
+        if (_selectedVehicle == vehicle)
+            _selectedVehicle = null;
+        StateHasChanged();
+    }
+    
+    private void Submit() => MudDialog?.Close(DialogResult.Ok(_newCustomer));
+    private void Cancel() => MudDialog?.Close(DialogResult.Cancel());
+}

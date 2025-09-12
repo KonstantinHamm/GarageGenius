@@ -1,0 +1,41 @@
+@page "/manage_account"
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+<PageTitle>Willkommen</PageTitle>
+
+<h1>Willkommen, @_username!</h1>
+@if (!string.IsNullOrEmpty(_givenName) || !string.IsNullOrEmpty(_familyName))
+{
+    <p>Hallo @_givenName @_familyName!</p>
+}
+@if (!string.IsNullOrEmpty(_picture))
+{
+    <img src="@_picture" alt="Profilbild" style="width:100px; height:100px; border-radius:50%;"/>
+}
+
+@code {
+    private string _username = "Unbekannter Benutzer";
+    private string _picture = "";
+    private string _givenName = "";
+    private string _familyName = "";
+
+    [CascadingParameter] private Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthenticationState is not null)
+        {
+            var state = await AuthenticationState;
+            var user = state.User;
+
+            _givenName = user.Claims.FirstOrDefault(c => c.Type == "given_name")?.Value ?? "";
+            _familyName = user.Claims.FirstOrDefault(c => c.Type == "family_name")?.Value ?? "";
+            _username = state.User.Identity?.Name ?? string.Empty;
+            _picture = state.User.Claims
+                .Where(c => c.Type == "picture")
+                .Select(c => c.Value)
+                .FirstOrDefault() ?? string.Empty;
+        }
+    }
+}

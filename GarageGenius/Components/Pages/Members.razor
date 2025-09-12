@@ -1,0 +1,13 @@
+﻿@page "/account/manage"
+
+@using Microsoft.AspNetCore.Authorization
+
+@attribute [Authorize]
+
+<PageTitle>Members</PageTitle>
+
+<h1>You are authenticated</h1>
+
+<AuthorizeView>
+    Hello @context.User.Identity?.Name!
+</AuthorizeView>
