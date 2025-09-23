@@ -1,4 +1,5 @@
 @using GarageGenius.Common.Models
+@using GarageGenius.UserInterface.Components
 
 <MudDialog>
     <TitleContent>
@@ -39,11 +40,11 @@
                         }
                     </MudList>
                     <MudStack Row="true" Spacing="2" Class="mt-2">
-                        <MudButton Color="Color.Error" Variant="Variant.Outlined" OnClick="ShowVehicleForm">
+                        <MudButton Color="Color.Error" Size="Size.Small" Variant="Variant.Outlined" OnClick="ShowVehicleForm">
                             Fahrzeug hinzufügen
                         </MudButton>
 
-                        <MudButton Color="Color.Primary" Variant="Variant.Outlined"
+                        <MudButton Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined"
                                    Disabled="@(_selectedVehicle is null)"
                                    OnClick="@(() => RemoveVehicle(_selectedVehicle))">
                             Fahrzeug entfernen
@@ -51,32 +52,11 @@
                     </MudStack>
 
                     <MudCollapse Expanded="_showVehicleForm" Class="mt-4">
-                        <MudPaper Class="pa-4">
-                            <MudText Typo="Typo.h6" Class="mb-2">Fahrzeugdetails</MudText>
-                            <MudStack Spacing="2">
-                                <MudTextField @bind-Value=_newVehicleLicensePlate Label="Kennzeichen"
-                                              Variant="Variant.Outlined"/>
-                                <MudTextField @bind-Value=_newVehicleBrand Label="Marke (Optional)"
-                                              Variant="Variant.Outlined"/>
-                                <MudTextField @bind-Value=_newVehicleModel Label="Modell (Optional)"
-                                              Variant="Variant.Outlined"/>
-                                <MudTextField @bind-Value=_newVehicleChassisNumber
-                                              Label="Fahrgestellnummer (Optional)"
-                                              Variant="Variant.Outlined"/>
-                                <MudTextField @bind-Value=_newVehicleNotes Label="Notiz zum Fahrzeug (Optional)"
-                                              Variant="Variant.Outlined"/>
-                                <MudStack Row="true" Spacing="2">
-                                    <MudButton Disabled="CanAddVehicle" Color="Color.Primary" Variant="Variant.Filled"
-                                               OnClick="ConfirmAddVehicle">
-                                        Fahrzeug übernehmen
-                                    </MudButton>
-                                    <MudButton Color="Color.Secondary" Variant="Variant.Outlined"
-                                               OnClick="CancelAddVehicle">
-                                        Abbrechen
-                                    </MudButton>
-                                </MudStack>
-                            </MudStack>
-                        </MudPaper>
+                        <VehicleFormComponent @bind-Vehicle="_newVehicle"
+                                            OnConfirm="ConfirmAddVehicle"
+                                            OnCancel="CancelAddVehicle"
+                                            ConfirmButtonText="Fahrzeug übernehmen"
+                                            CancelButtonText="Abbrechen" />
                     </MudCollapse>
                 </MudPaper>
             </MudItem>
@@ -92,15 +72,8 @@
     private readonly Customer _newCustomer = new();
     private Vehicle? _selectedVehicle;
     private bool _showVehicleForm;
-    
-    private string? _newVehicleLicensePlate;
-    private string? _newVehicleBrand;
-    private string? _newVehicleModel;
-    private string? _newVehicleChassisNumber;
-    private string? _newVehicleNotes;
-
+    private Vehicle _newVehicle = new();
     [CascadingParameter] private IMudDialogInstance? MudDialog { get; set; }
-    private bool CanAddVehicle => string.IsNullOrEmpty(_newVehicleLicensePlate);
     
     private void ShowVehicleForm()
     {
@@ -109,24 +82,38 @@
 
     private void ConfirmAddVehicle()
     {
-        var newVehicle = new Vehicle
+        var vehicleToAdd = new Vehicle
         {
-            LicensePlate = _newVehicleLicensePlate,
-            Brand = _newVehicleBrand,
-            Model = _newVehicleModel,
-            ChassisNumber = _newVehicleChassisNumber,
-            Notes = _newVehicleNotes
+            LicensePlate = _newVehicle.LicensePlate,
+            Brand = _newVehicle.Brand,
+            Model = _newVehicle.Model,
+            ChassisNumber = _newVehicle.ChassisNumber,
+            Notes = _newVehicle.Notes
         };
         
-        _newCustomer.Vehicles.Add(newVehicle);
-        _selectedVehicle = newVehicle;
+        _newCustomer.Vehicles.Add(vehicleToAdd);
+        _selectedVehicle = vehicleToAdd;
         _showVehicleForm = false;
+        
+        _newVehicle.LicensePlate = null;
+        _newVehicle.Brand = null;
+        _newVehicle.Model = null;
+        _newVehicle.ChassisNumber = null;
+        _newVehicle.Notes = null;
+        
         StateHasChanged();
     }
 
     private void CancelAddVehicle()
     {
         _showVehicleForm = false;
+        
+        _newVehicle.LicensePlate = null;
+        _newVehicle.Brand = null;
+        _newVehicle.Model = null;
+        _newVehicle.ChassisNumber = null;
+        _newVehicle.Notes = null;
+        
         StateHasChanged();
     }
 

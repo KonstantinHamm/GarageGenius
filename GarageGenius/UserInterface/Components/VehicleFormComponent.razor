@@ -1,0 +1,42 @@
+@using GarageGenius.Common.Models
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h6" Class="mb-2">Fahrzeugdetails</MudText>
+    <MudStack Spacing="2">
+        <MudTextField @bind-Value="Vehicle.LicensePlate" Label="Kennzeichen"
+                      Variant="Variant.Outlined"/>
+        <MudTextField @bind-Value="Vehicle.Brand" Label="Marke (Optional)"
+                      Variant="Variant.Outlined"/>
+        <MudTextField @bind-Value="Vehicle.Model" Label="Modell (Optional)"
+                      Variant="Variant.Outlined"/>
+        <MudTextField @bind-Value="Vehicle.ChassisNumber"
+                      Label="Fahrgestellnummer (Optional)"
+                      Variant="Variant.Outlined"/>
+        <MudTextField @bind-Value="Vehicle.Notes" Label="Notiz zum Fahrzeug (Optional)"
+                      Variant="Variant.Outlined"/>
+        <MudStack Row="true" Spacing="2">
+            <MudButton Disabled="@(string.IsNullOrEmpty(Vehicle.LicensePlate))" 
+                       Variant="Variant.Text"
+                       Size="Size.Small"
+                       OnClick="OnConfirm">
+                @ConfirmButtonText
+            </MudButton>
+            <MudButton Variant="Variant.Text"
+                       Size="Size.Small"
+                       OnClick="OnCancel">
+                @CancelButtonText
+            </MudButton>
+        </MudStack>
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter] public Vehicle Vehicle { get; set; } = new();
+    [Parameter] public EventCallback<Vehicle> VehicleChanged { get; set; }
+    
+    [Parameter] public EventCallback OnConfirm { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+    
+    [Parameter] public string ConfirmButtonText { get; set; } = "Bestätigen";
+    [Parameter] public string CancelButtonText { get; set; } = "Abbrechen";
+}

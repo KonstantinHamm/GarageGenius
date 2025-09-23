@@ -1,0 +1,46 @@
+@using GarageGenius.Common.Models
+
+<MudDialog>
+    <DialogContent>
+        <MudText>
+            <strong>@Customer?.Name</strong> löschen?
+        </MudText>
+        <MudText>
+            Bitte geben Sie in das Textfeld den Namen des Kunden ein um die Löschung zu bestätigen
+        </MudText>
+        <MudTextField @bind-Value="@ConfirmationText" 
+                      Label="Kundenname zur Bestätigung" 
+                      Variant="Variant.Outlined"
+                      Placeholder="@Customer?.Name"
+                      HelperText="@($"Geben Sie '{Customer?.Name}' ein")"
+                      Class="mt-2"></MudTextField>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Abbrechen</MudButton>
+        <MudButton Color="Color.Error" 
+                   OnClick="FinallyConfirmDeletion"
+                   Disabled="@(!IsConfirmationValid)"
+                   Variant="Variant.Filled">
+            Endgültig Löschen
+        </MudButton>
+
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance? MudDialog { get; set; }
+    [Parameter] public Customer? Customer { get; set; }
+    private string? ConfirmationText { get; set; }
+    
+    private bool IsConfirmationValid => 
+    !string.IsNullOrWhiteSpace(ConfirmationText) && 
+    ConfirmationText.Trim() == Customer?.Name?.Trim();
+    
+    private void Cancel() => MudDialog?.Close(DialogResult.Cancel());
+
+    private void FinallyConfirmDeletion()
+    {
+        if (IsConfirmationValid)
+            MudDialog?.Close(DialogResult.Ok(true));
+    }
+}

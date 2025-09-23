@@ -1,0 +1,37 @@
+@using GarageGenius.Common.Models
+
+@inject IDialogService DialogService
+
+<MudDialog>
+    <DialogContent>
+        <MudText>
+            Möchten Sie wirklich <strong>@Customer?.Name</strong> löschen?
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Abbrechen</MudButton>
+        <MudButton Color="Color.Primary" OnClick="ConfirmDeleteCustomerAsync">Löschen</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance? MudDialog { get; set; }
+    [Parameter] public Customer? Customer { get; set; }
+
+    private void Cancel() => MudDialog?.Close(DialogResult.Cancel());
+
+    private async Task ConfirmDeleteCustomerAsync()
+    {
+        var finalDeletionParameters = new DialogParameters<DeletionConfirmationDialog>
+        {
+            {x => x.Customer, Customer}
+        };
+
+        var dialog = await DialogService.ShowAsync<DeletionConfirmationDialog>("Kunde löschen", 
+            finalDeletionParameters);
+        
+        var result = await dialog.Result;
+
+        MudDialog?.Close(result is { Canceled: false, Data: true } ? DialogResult.Ok(true) : DialogResult.Ok(false));
+    }
+}
