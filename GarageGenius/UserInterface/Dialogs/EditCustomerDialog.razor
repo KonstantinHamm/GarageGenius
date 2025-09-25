@@ -6,63 +6,50 @@
         color: white !important;
     }
 </style>
-
 <MudDialog>
     <DialogContent>
         <MudTextField @bind-Value="_editedCustomerName" Label="Name" Variant="Variant.Text"></MudTextField>
         <MudTextField @bind-Value="_editedCustomerNote" Label="Notiz" Variant="Variant.Text"></MudTextField>
-        <MudText Typo="Typo.h6" Class="mt-4 mb-2">Fahrzeuge</MudText>
-        <MudCollapse Expanded="!_showVehicleForm">
-            <MudPaper>
-                <MudTable T="Vehicle" Items="@_vehicles"
-                          Hover="true"
-                          Dense="true"
-                          FixedHeader="true"
-                          Height="200px"
-                          @ref="_mudTable"
-                          RowClass="cursor-pointer"
-                          RowClassFunc="@SelectedRowClassFunc"
-                          OnRowClick="RowClickEvent">
-                    <HeaderContent>
-                        <MudTh>Marke</MudTh>
-                        <MudTh>Modell</MudTh>
-                        <MudTh>Kennzeichen</MudTh>
-                        <MudTh>Notizen</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Marke">@context.Brand</MudTd>
-                        <MudTd DataLabel="Modell">@context.Model</MudTd>
-                        <MudTd DataLabel="Kennzeichen">@context.LicensePlate</MudTd>
-                        <MudTd DataLabel="Notizen">@context.Notes</MudTd>
-                    </RowTemplate>
-                    <NoRecordsContent>
-                        <MudText>Keine Fahrzeuge vorhanden</MudText>
-                    </NoRecordsContent>
-                </MudTable>
-            </MudPaper>
-        </MudCollapse>
-        <MudStack Row="true" Spacing="2" Justify="Justify.FlexEnd">
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Primary"
-                       StartIcon="@Icons.Material.Filled.Add"
-                       OnClick="AddVehicle">
-                Hinzufügen
-            </MudButton>
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Secondary"
-                       StartIcon="@Icons.Material.Filled.Remove"
-                       OnClick="RemoveSelectedVehicle"
-                       Disabled="@(_selectedVehicle == null)">
-                Entfernen
-            </MudButton>
+        <MudStack Justify="Justify.SpaceBetween" Row="true" Class="my-3">
+            <MudText Typo="Typo.h6" Class="mt-4 mb-2">Fahrzeuge</MudText>
+            <MudFab Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Add" @onclick="AddVehicle"/>
         </MudStack>
-        <MudCollapse Expanded="_showVehicleForm" Class="mt-4">
+        <MudPaper Class="my-3">
+            <MudTable T="Vehicle" Items="@_vehicles"
+                      Hover="true"
+                      Dense="true"
+                      FixedHeader="true"
+                      Height="200px"
+                      @ref="_mudTable"
+                      RowClass="cursor-pointer"
+                      RowClassFunc="@SelectedRowClassFunc"
+                      OnRowClick="RowClickEvent">
+                <HeaderContent>
+                    <MudTh>Marke</MudTh>
+                    <MudTh>Modell</MudTh>
+                    <MudTh>Kennzeichen</MudTh>
+                    <MudTh>Notizen</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Marke">@context.Brand</MudTd>
+                    <MudTd DataLabel="Modell">@context.Model</MudTd>
+                    <MudTd DataLabel="Kennzeichen">@context.LicensePlate</MudTd>
+                    <MudTd DataLabel="Notizen">@context.Notes</MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText>Keine Fahrzeuge vorhanden</MudText>
+                </NoRecordsContent>
+            </MudTable>
+        </MudPaper>
+        <MudOverlay @bind-Visible="_showVehicleForm" DarkBackground="true"
+                    Modal="true" OnClosed="OnCloseOverlay">
             <VehicleFormComponent @bind-Vehicle="_newVehicle"
                                   OnConfirm="ConfirmAddVehicle"
                                   OnCancel="CancelAddVehicle"
-                                  ConfirmButtonText="Fahrzeug übernehmen"
+                                  ConfirmButtonText="Übernehmen"
                                   CancelButtonText="Abbrechen"/>
-        </MudCollapse>
+
+        </MudOverlay>
         <MudStack Row="true" Spacing="2" Justify="Justify.FlexEnd">
             <MudButton OnClick="SubmitChanges" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save"
                        Color="Color.Primary">
@@ -75,6 +62,7 @@
         </MudStack>
     </DialogContent>
 </MudDialog>
+
 
 @code {
     [CascadingParameter] private IMudDialogInstance? MudDialog { get; set; }
@@ -122,7 +110,7 @@
 
     private void AddVehicle()
     {
-        _showVehicleForm = true;
+        _showVehicleForm = !_showVehicleForm;
     }
 
     private void ConfirmAddVehicle()
@@ -189,4 +177,9 @@
     }
 
     private void CancelChanges() => MudDialog?.Close(DialogResult.Cancel());
+
+    private void OnCloseOverlay()
+    {
+    }
+
 }

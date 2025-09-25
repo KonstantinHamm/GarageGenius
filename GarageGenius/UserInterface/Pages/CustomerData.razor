@@ -159,7 +159,6 @@
     
     private async Task ShowEditCustomerDialogAsync(Customer customer)
     {
-        // Öffnet einen Dialog, in dem man den Kunden usw. Editieren kann
         var options = new DialogOptions
         {
             CloseOnEscapeKey = true,
@@ -182,5 +181,4 @@
             options);
         var result = await dialogReference.Result;
     }
-
 }
