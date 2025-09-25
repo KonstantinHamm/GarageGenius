@@ -12,7 +12,6 @@
         <MudTextField @bind-Value="_editedCustomerName" Label="Name" Variant="Variant.Text"></MudTextField>
         <MudTextField @bind-Value="_editedCustomerNote" Label="Notiz" Variant="Variant.Text"></MudTextField>
         <MudText Typo="Typo.h6" Class="mt-4 mb-2">Fahrzeuge</MudText>
-
         <MudCollapse Expanded="!_showVehicleForm">
             <MudPaper>
                 <MudTable T="Vehicle" Items="@_vehicles"
@@ -42,14 +41,13 @@
                 </MudTable>
             </MudPaper>
         </MudCollapse>
-        <div class="d-flex justify-content-center mt-3 gap-2">
+        <MudStack Row="true" Spacing="2" Justify="Justify.FlexEnd">
             <MudButton Variant="Variant.Filled"
                        Color="Color.Primary"
                        StartIcon="@Icons.Material.Filled.Add"
                        OnClick="AddVehicle">
                 Hinzufügen
             </MudButton>
-
             <MudButton Variant="Variant.Filled"
                        Color="Color.Secondary"
                        StartIcon="@Icons.Material.Filled.Remove"
@@ -57,24 +55,24 @@
                        Disabled="@(_selectedVehicle == null)">
                 Entfernen
             </MudButton>
-        </div>
-
+        </MudStack>
         <MudCollapse Expanded="_showVehicleForm" Class="mt-4">
             <VehicleFormComponent @bind-Vehicle="_newVehicle"
                                   OnConfirm="ConfirmAddVehicle"
                                   OnCancel="CancelAddVehicle"
-                                  ConfirmButtonText="Fahrzeug hinzufügen"
+                                  ConfirmButtonText="Fahrzeug übernehmen"
                                   CancelButtonText="Abbrechen"/>
         </MudCollapse>
-
-        <MudButton OnClick="SubmitChanges" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save"
-                   Color="Color.Primary">
-            Speichern
-        </MudButton>
-        <MudButton OnClick="CancelChanges" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Cancel"
-                   Color="Color.Secondary">
-            Abbrechen
-        </MudButton>
+        <MudStack Row="true" Spacing="2" Justify="Justify.FlexEnd">
+            <MudButton OnClick="SubmitChanges" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save"
+                       Color="Color.Primary">
+                Speichern
+            </MudButton>
+            <MudButton OnClick="CancelChanges" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Cancel"
+                       Color="Color.Secondary">
+                Abbrechen
+            </MudButton>
+        </MudStack>
     </DialogContent>
 </MudDialog>
 

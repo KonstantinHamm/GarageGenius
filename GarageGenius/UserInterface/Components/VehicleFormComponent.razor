@@ -14,7 +14,7 @@
                       Variant="Variant.Outlined"/>
         <MudTextField @bind-Value="Vehicle.Notes" Label="Notiz zum Fahrzeug (Optional)"
                       Variant="Variant.Outlined"/>
-        <MudStack Row="true" Spacing="2">
+        <MudStack Row="true" Spacing="2" Justify="Justify.FlexEnd">
             <MudButton Disabled="@(string.IsNullOrEmpty(Vehicle.LicensePlate))" 
                        Variant="Variant.Text"
                        Size="Size.Small"
