@@ -24,14 +24,15 @@
     {
         var finalDeletionParameters = new DialogParameters<DeletionConfirmationDialog>
         {
-            {x => x.Customer, Customer}
+            { x => x.Customer, Customer }
         };
 
-        var dialog = await DialogService.ShowAsync<DeletionConfirmationDialog>("Kunde löschen", 
+        var dialog = await DialogService.ShowAsync<DeletionConfirmationDialog>("Kunde löschen",
             finalDeletionParameters);
-        
+
         var result = await dialog.Result;
 
-        MudDialog?.Close(result is { Canceled: false, Data: true } ? DialogResult.Ok(true) : DialogResult.Ok(false));
+        if (result is { Canceled: false, Data: not null })
+            MudDialog?.Close(Customer);
     }
 }

@@ -2,7 +2,7 @@
 
 @using GarageGenius.Common.Extensions
 @using GarageGenius.Common.Models
-@using GarageGenius.UserInterface.Dialogs
+@using GarageGenius.UserInterface.Dialogs.CustomerManagement
 
 @inject Common.Data.ICustomerRepository CustomerRepository
 @inject IDialogService DialogService
@@ -15,7 +15,7 @@
     </MudButton>
     <MudPaper>
         <MudTable xs="12" Items="@_customers"
-                  RowEditCommit="OnEditCommit" Filter="new Func<Customer, bool>(FilterFunc)"
+                  Filter="new Func<Customer, bool>(FilterFunc)"
                   SelectedItem=_selectedCustomer!
                   SelectedItemChanged="@((Customer? customer) => _selectedCustomer = customer)">
             <ToolBarContent>
@@ -34,10 +34,10 @@
             <RowTemplate>
                 <MudTd DataLabel="Id">@context.Id</MudTd>
                 <MudTd DataLabel="Name">
-                    <MudTextField @bind-Value="context.Name" Immediate="true" Margin="Margin.Dense"/>
+                    <MudTextField @bind-Value="context.Name" Immediate="true" Margin="Margin.Dense" ReadOnly="true"/>
                 </MudTd>
                 <MudTd DataLabel="Notiz">
-                    <MudTextField @bind-Value="context.Note" Immediate="true" Margin="Margin.Dense"/>
+                    <MudTextField @bind-Value="context.Note" Immediate="true" Margin="Margin.Dense" ReadOnly="true"/>
                 </MudTd>
                 <MudTd>
                     <MudIconButton OnClick="@(() => ShowEditCustomerDialogAsync(context))"
@@ -97,28 +97,13 @@
         if (string.IsNullOrWhiteSpace(searchString))
             return true;
 
-        return (customer.Name?.Like(searchString) == true) ||
-               (customer.Note?.Like(searchString) == true);
+        return customer.Name?.Like(searchString) == true ||
+               customer.Note?.Like(searchString) == true;
     }
 
     private bool FilterFunc(Customer customer) => _searchString != null && FilterFunc(customer, _searchString);
-
-    private async void OnEditCommit(object? item)
-    {
-        try
-        {
-            if (item is not Customer customer) return;
-
-            await CustomerRepository.UpdateCustomerAsync(customer);
-            await CustomerRepository.SaveChangesAsync();
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Could not update User in Database.");
-        }
-    }
-
-    private async Task ShowCustomerDeletionDialogAsync(Customer customer)
+    
+    private async Task ShowCustomerDeletionDialogAsync(Customer? customer)
     {
         var options = new DialogOptions
         {
@@ -140,24 +125,29 @@
             "Kunden löschen",
             parameters,
             options);
+        
         var result = await dialogReference.Result;
-
-        if (result is { Canceled: false, Data: true })
+        
+        try
         {
-            CustomerRepository.Remove(customer);
-            await CustomerRepository.SaveChangesAsync();
-            await UpdateCustomerCollection();
-            StateHasChanged();
+            if (result is { Canceled: false, Data: not null })
+            {
+                customer = result.Data as Customer;
+                CustomerRepository.Remove(customer ?? 
+                                          throw new ArgumentNullException(nameof(customer)));
+                await CustomerRepository.SaveChangesAsync();
+                await UpdateCustomerCollection();
+                StateHasChanged();
+            }
+        }
+        catch (Exception e)
+        {
+            Logger.LogError(e, "Unable do delete customer.");
+            // Todo: Toast-Message anzeigen!
         }
     }
     
-    private void OnSelectedCustomerChanged(Customer? customer)
-    {
-        _selectedCustomer = customer;
-        StateHasChanged();
-    }
-    
-    private async Task ShowEditCustomerDialogAsync(Customer customer)
+    private async Task ShowEditCustomerDialogAsync(Customer? customer)
     {
         var options = new DialogOptions
         {
@@ -180,5 +170,23 @@
             parameters,
             options);
         var result = await dialogReference.Result;
+        
+        if (result is { Canceled: false, Data: not null})
+        {
+            try
+            {
+                customer = result.Data as Customer;
+                await CustomerRepository.UpdateCustomerAsync(customer ?? 
+                                                             throw new ArgumentNullException(nameof(customer)));
+                await CustomerRepository.SaveChangesAsync();
+                await UpdateCustomerCollection();
+                StateHasChanged();
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(e, "was not able to update customer");
+                // Todo: Toast-Message hinzufügen
+            }
+        }
     }
 }

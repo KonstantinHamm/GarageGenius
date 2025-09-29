@@ -1,0 +1,236 @@
+@using GarageGenius.Common.Models
+@using GarageGenius.UserInterface.Components
+
+<style>
+    .selected > td {
+        color: white !important;
+    }
+</style>
+<MudDialog>
+    <DialogContent>
+        <MudTextField @bind-Value="_editedCustomerName" Label="Name" Variant="Variant.Text"></MudTextField>
+        <MudTextField @bind-Value="_editedCustomerNote" Label="Notiz" Variant="Variant.Text"></MudTextField>
+        <MudStack Justify="Justify.SpaceBetween" Row="true" Class="my-3">
+            <MudText Typo="Typo.h6" Class="mt-4 mb-2">Fahrzeuge</MudText>
+            <MudFab Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Add" @onclick="AddVehicle"/>
+        </MudStack>
+        <MudPaper Class="my-3">
+            <MudTable T="Vehicle" Items="@_vehicles"
+                      Hover="true"
+                      Dense="true"
+                      FixedHeader="true"
+                      Height="240px"
+                      @ref="_mudTable"
+                      RowClass="cursor-pointer"
+                      RowClassFunc="@SelectedRowClassFunc"
+                      OnRowClick="RowClickEvent"
+                      OnRowDoubleClick="BeginEditSelected">
+                <HeaderContent>
+                    <MudTh>Marke</MudTh>
+                    <MudTh>Modell</MudTh>
+                    <MudTh>Kennzeichen</MudTh>
+                    <MudTh>Notizen</MudTh>
+                    <MudTh style="width: 110px;">Aktionen</MudTh>
+                </HeaderContent>
+                <RowTemplate Context="row">
+                    <MudTd DataLabel="Marke" @ondblclick="@(() => BeginEditVehicle(row))">@row.Brand</MudTd>
+                    <MudTd DataLabel="Modell" @ondblclick="@(() => BeginEditVehicle(row))">@row.Model</MudTd>
+                    <MudTd DataLabel="Kennzeichen" @ondblclick="@(() => BeginEditVehicle(row))">@row.LicensePlate</MudTd>
+                    <MudTd DataLabel="Notizen" @ondblclick="@(() => BeginEditVehicle(row))">@row.Notes</MudTd>
+                    <MudTd DataLabel="Aktionen">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="@(() => BeginEditVehicle(row))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(() => ConfirmRemoveVehicle(row))" />
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText>Keine Fahrzeuge vorhanden</MudText>
+                </NoRecordsContent>
+            </MudTable>
+        </MudPaper>
+        <MudOverlay @bind-Visible="_showVehicleForm" DarkBackground="true" Modal="true">
+            <VehicleFormComponent @bind-Vehicle="_editBufferVehicle"
+                                  OnConfirm="ConfirmVehicleForm"
+                                  OnCancel="CancelVehicleForm"
+                                  ConfirmButtonText="Übernehmen"
+                                  CancelButtonText="Abbrechen"/>
+        </MudOverlay>
+        <MudStack Row="true" Spacing="2" Justify="Justify.FlexEnd">
+            <MudButton OnClick="SubmitChanges" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save"
+                       Color="Color.Primary">
+                Speichern
+            </MudButton>
+            <MudButton OnClick="CancelChanges" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Cancel"
+                       Color="Color.Secondary">
+                Abbrechen
+            </MudButton>
+        </MudStack>
+    </DialogContent>
+</MudDialog>
+
+
+@code {
+    [CascadingParameter] private IMudDialogInstance? MudDialog { get; set; }
+    [Inject] private IDialogService DialogService { get; set; } = default!;
+    [Parameter] public Customer? Customer { get; set; }
+    private string? _editedCustomerName;
+    private string? _editedCustomerNote;
+    private List<Vehicle> _vehicles = new();
+
+    private int _selectedRowNumber = -1;
+    private MudTable<Vehicle>? _mudTable;
+
+    private bool _showVehicleForm;
+    private Vehicle _editBufferVehicle = new();
+    private Vehicle? _vehicleBeingEdited;
+    private bool _isEditMode = false;
+
+    protected override void OnInitialized()
+    {
+        if (Customer == null) return;
+        _editedCustomerName = Customer.Name;
+        _editedCustomerNote = Customer.Note;
+        _vehicles = Customer.Vehicles.ToList();
+    }
+
+    private void RowClickEvent(TableRowClickEventArgs<Vehicle> tableRowClickEventArgs)
+    {
+        StateHasChanged();
+    }
+
+    private string SelectedRowClassFunc(Vehicle vehicle, int rowNumber)
+    {
+        if (_selectedRowNumber == rowNumber)
+        {
+            _selectedRowNumber = -1;
+            return string.Empty;
+        }
+
+        if (_mudTable?.SelectedItem == null || !_mudTable.SelectedItem.Equals(vehicle)) return string.Empty;
+
+        _selectedRowNumber = rowNumber;
+        return "selected";
+    }
+
+    private void AddVehicle()
+    {
+        _isEditMode = false;
+        _vehicleBeingEdited = null;
+        _editBufferVehicle = new Vehicle
+        {
+            CustomerId = Customer?.Id ?? 0
+        };
+        _showVehicleForm = true;
+    }
+
+    private void BeginEditVehicle(Vehicle vehicle)
+    {
+        _isEditMode = true;
+        _vehicleBeingEdited = vehicle;
+
+        _editBufferVehicle = new Vehicle
+        {
+            Id = vehicle.Id,
+            CustomerId = vehicle.CustomerId,
+            LicensePlate = vehicle.LicensePlate,
+            Brand = vehicle.Brand,
+            Model = vehicle.Model,
+            ChassisNumber = vehicle.ChassisNumber,
+            Notes = vehicle.Notes
+        };
+
+        _showVehicleForm = true;
+        StateHasChanged();
+    }
+
+    private void ConfirmVehicleForm()
+    {
+        if (_isEditMode && _vehicleBeingEdited != null)
+        {
+            _vehicleBeingEdited.LicensePlate = _editBufferVehicle.LicensePlate;
+            _vehicleBeingEdited.Brand = _editBufferVehicle.Brand;
+            _vehicleBeingEdited.Model = _editBufferVehicle.Model;
+            _vehicleBeingEdited.ChassisNumber = _editBufferVehicle.ChassisNumber;
+            _vehicleBeingEdited.Notes = _editBufferVehicle.Notes;
+        }
+        else
+        {
+            var vehicleToAdd = new Vehicle
+            {
+                LicensePlate = _editBufferVehicle.LicensePlate,
+                Brand = _editBufferVehicle.Brand,
+                Model = _editBufferVehicle.Model,
+                ChassisNumber = _editBufferVehicle.ChassisNumber,
+                Notes = _editBufferVehicle.Notes,
+                CustomerId = Customer?.Id ?? 0
+            };
+            _vehicles.Add(vehicleToAdd);
+        }
+
+        _showVehicleForm = false;
+        _isEditMode = false;
+        _vehicleBeingEdited = null;
+        _editBufferVehicle = new Vehicle();
+        StateHasChanged();
+    }
+
+    private void CancelVehicleForm()
+    {
+        _showVehicleForm = false;
+        _isEditMode = false;
+        _vehicleBeingEdited = null;
+        _editBufferVehicle = new Vehicle();
+        StateHasChanged();
+    }
+
+    private async Task ConfirmRemoveVehicle(Vehicle vehicle)
+    {
+        var parameters = new DialogParameters
+        {
+            ["ContentText"] = $"Fahrzeug '{vehicle.Brand} {vehicle.Model} ({vehicle.LicensePlate})' wirklich löschen?",
+            ["ButtonText"] = "Löschen",
+            ["Color"] = Color.Error
+        };
+
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Small,
+            FullWidth = true,
+            CloseButton = false,
+            Position = DialogPosition.Center,
+            NoHeader = false,
+            BackdropClick = true
+        };
+
+        var dlg = await DialogService.ShowAsync<ConfirmDialog>("Löschen bestätigen", parameters, options);
+        var result = await dlg.Result;
+
+        if (result is { Canceled: false })
+        {
+            _vehicles.Remove(vehicle);
+            if (ReferenceEquals(_vehicleBeingEdited, vehicle))
+            {
+                _isEditMode = false;
+                _vehicleBeingEdited = null;
+                _showVehicleForm = false;
+            }
+            StateHasChanged();
+        }
+    }
+
+    private void SubmitChanges()
+    {
+        if (Customer == null)
+            throw new ArgumentNullException(nameof(Customer));
+
+        if (!string.IsNullOrEmpty(_editedCustomerName) && !Customer.Name!.Equals(_editedCustomerName))
+            Customer.Name = _editedCustomerName;
+
+        if (!string.IsNullOrEmpty(_editedCustomerNote) && !Customer.Note!.Equals(_editedCustomerNote))
+            Customer.Note = _editedCustomerNote;
+
+        Customer.Vehicles = _vehicles.ToList();
+        MudDialog?.Close(DialogResult.Ok(Customer));
+    }
+    private void CancelChanges() => MudDialog?.Close(DialogResult.Cancel());
+}

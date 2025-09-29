@@ -1,7 +1,6 @@
 using Auth0.AspNetCore.Authentication;
 using GarageGenius.Common.Data;
 using Microsoft.EntityFrameworkCore;
-using GarageGenius.Components;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using MudBlazor.Services;
